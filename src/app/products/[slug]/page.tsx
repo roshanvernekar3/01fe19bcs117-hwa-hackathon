@@ -1,17 +1,18 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { getProduct, byCategory } from "@/lib/products";
+import { getCatalog } from "@/lib/products-store";
 import AddToCart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
 
 export default async function ProductDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const catalog = await getCatalog();
+  const product = catalog.find((p) => p.slug === slug);
   if (!product) notFound();
 
-  const related = byCategory(product.category).filter((p) => p.slug !== slug).slice(0, 4);
+  const related = catalog.filter((p) => p.category === product.category && p.slug !== slug).slice(0, 4);
 
   const isToy = product.category === "interactive-toys";
   const stepsTitle = isToy ? "How to Play" : "How to Use";

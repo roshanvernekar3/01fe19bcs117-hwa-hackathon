@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { PRODUCTS, CATEGORIES } from "@/lib/products";
+import { CATEGORIES } from "@/lib/products";
+import { getCatalog } from "@/lib/products-store";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
 import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
 import NewsletterSection from "@/components/NewsletterSection";
 
-export default function Home() {
+export default async function Home() {
+  const PRODUCTS = await getCatalog();
   const featured = PRODUCTS.slice(0, 4);
   const bestsellers = PRODUCTS.filter((p) => p.badge).slice(0, 4);
 

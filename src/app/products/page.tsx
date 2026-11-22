@@ -1,8 +1,9 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
-import { PRODUCTS, CATEGORIES, type Category } from "@/lib/products";
+import { Suspense, useMemo, useState, useEffect } from "react";
+import type { Product, Category } from "@/lib/products";
+import { CATEGORIES } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
 
 function ProductsInner() {
@@ -12,9 +13,24 @@ function ProductsInner() {
   const q = params.get("q") ?? "";
   const sort = params.get("sort") ?? "featured";
   const [search, setSearch] = useState(q);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/products", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setProducts(d.products || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearch(q);
+  }, [q]);
 
   const filtered = useMemo(() => {
-    let list = PRODUCTS;
+    let list = products;
     if (cat) list = list.filter((p) => p.category === cat);
     if (search) list = list.filter((p) => (p.name + p.tagline + p.description).toLowerCase().includes(search.toLowerCase()));
     const sorted = [...list];
@@ -22,7 +38,7 @@ function ProductsInner() {
     if (sort === "price-desc") sorted.sort((a, b) => b.price - a.price);
     if (sort === "rating") sorted.sort((a, b) => b.rating - a.rating);
     return sorted;
-  }, [cat, search, sort]);
+  }, [products, cat, search, sort]);
 
   function setParam(key: string, value: string) {
     const sp = new URLSearchParams(params.toString());
@@ -37,7 +53,7 @@ function ProductsInner() {
           <h1 className="text-3xl md:text-4xl font-extrabold text-navy">
             {cat ? CATEGORIES.find((c) => c.slug === cat)?.name ?? "Products" : "All Products"}
           </h1>
-          <p className="text-slate-500 mt-1">{filtered.length} products</p>
+          <p className="text-slate-500 mt-1">{loading ? "Loading..." : `${filtered.length} products`}</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <input
@@ -81,7 +97,9 @@ function ProductsInner() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-20 text-slate-500">Loading products...</div>
+      ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-slate-500">No products found.</div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

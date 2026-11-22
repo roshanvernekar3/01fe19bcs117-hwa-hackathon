@@ -1,17 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useCart } from "@/lib/cart-context";
-import { PRODUCTS } from "@/lib/products";
+import type { Product } from "@/lib/products";
 
 export default function WishlistPage() {
   const { items, remove, clear } = useWishlist();
   const { add } = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    fetch("/api/products", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setProducts(d.products || []))
+      .catch(() => {});
+  }, []);
+
   const wishedProducts = items
-    .map((slug) => PRODUCTS.find((p) => p.slug === slug))
-    .filter(Boolean) as typeof PRODUCTS;
+    .map((slug) => products.find((p) => p.slug === slug))
+    .filter(Boolean) as Product[];
+
+  if (products.length === 0) {
+    return <div className="max-w-3xl mx-auto px-4 py-20 text-center text-slate-500">Loading...</div>;
+  }
 
   if (wishedProducts.length === 0) {
     return (

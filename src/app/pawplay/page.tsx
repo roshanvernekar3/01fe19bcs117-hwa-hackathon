@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { PRODUCTS } from "@/lib/products";
+import type { Product } from "@/lib/products";
 import { useCart } from "@/lib/cart-context";
 
 type PetType = "dog" | "cat";
@@ -42,6 +42,7 @@ const ACTIVITY_LABELS: { key: Activity; label: string; emoji: string }[] = [
 
 export default function PawPlayMatch() {
   const { add } = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
   const [step, setStep] = useState(0);
   const [pet, setPet] = useState<PetType | null>(null);
   const [age, setAge] = useState<Age | null>(null);
@@ -49,6 +50,13 @@ export default function PawPlayMatch() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [added, setAdded] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    fetch("/api/products", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setProducts(d.products || []))
+      .catch(() => {});
+  }, []);
 
   function toggleActivity(a: Activity) {
     setActivities((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
@@ -79,7 +87,7 @@ export default function PawPlayMatch() {
 
   function recommend() {
     const acts = activities.length ? activities : (["foraging"] as unknown as Activity[]);
-    const scored = PRODUCTS.map((p) => {
+    const scored = products.map((p) => {
       const tags = PRODUCT_TAGS[p.slug] || [];
       let score = 0;
       // species filter
@@ -106,7 +114,7 @@ export default function PawPlayMatch() {
 
   const results = showResults ? recommend() : [];
 
-  function handleAdd(p: (typeof PRODUCTS)[number]) {
+  function handleAdd(p: Product) {
     add({ slug: p.slug, name: p.name, price: p.price, emoji: p.emoji });
     setAdded((a) => ({ ...a, [p.slug]: true }));
     setTimeout(() => setAdded((a) => ({ ...a, [p.slug]: false })), 1500);

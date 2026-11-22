@@ -8,6 +8,12 @@ export async function GET(req: NextRequest) {
     if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json({ order });
   }
+  // listing all orders is admin-only
+  const cookie = req.cookies.get("pb_admin")?.value;
+  const expected = process.env.ADMIN_PASSWORD || "pawberry-admin";
+  if (cookie !== expected) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const orders = await listOrders();
   return NextResponse.json({ orders });
 }
