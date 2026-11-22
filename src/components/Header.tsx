@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
+import { useWishlist } from "@/lib/wishlist-context";
 import { useState } from "react";
 
 export default function Header() {
   const { count } = useCart();
+  const { count: wcount } = useWishlist();
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,6 +28,14 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
+          <Link href="/wishlist" className="relative inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition">
+            <span className="text-xl">♡</span>
+            {wcount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-berry text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {wcount}
+              </span>
+            )}
+          </Link>
           <Link href="/cart" className="relative inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition">
             <span className="text-xl">🛒</span>
             {count > 0 && (

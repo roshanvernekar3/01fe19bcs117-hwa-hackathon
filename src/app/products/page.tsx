@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { PRODUCTS, CATEGORIES, type Category } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
 
@@ -11,17 +11,18 @@ function ProductsInner() {
   const cat = params.get("category") as Category | null;
   const q = params.get("q") ?? "";
   const sort = params.get("sort") ?? "featured";
+  const [search, setSearch] = useState(q);
 
   const filtered = useMemo(() => {
     let list = PRODUCTS;
     if (cat) list = list.filter((p) => p.category === cat);
-    if (q) list = list.filter((p) => (p.name + p.tagline + p.description).toLowerCase().includes(q.toLowerCase()));
+    if (search) list = list.filter((p) => (p.name + p.tagline + p.description).toLowerCase().includes(search.toLowerCase()));
     const sorted = [...list];
     if (sort === "price-asc") sorted.sort((a, b) => a.price - b.price);
     if (sort === "price-desc") sorted.sort((a, b) => b.price - a.price);
     if (sort === "rating") sorted.sort((a, b) => b.rating - a.rating);
     return sorted;
-  }, [cat, q, sort]);
+  }, [cat, search, sort]);
 
   function setParam(key: string, value: string) {
     const sp = new URLSearchParams(params.toString());
@@ -42,9 +43,10 @@ function ProductsInner() {
           <input
             type="search"
             placeholder="Search products..."
-            defaultValue={q}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") setParam("q", (e.target as HTMLInputElement).value);
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setParam("q", e.target.value);
             }}
             className="px-4 py-2 rounded-full border border-slate-200 focus:outline-none focus:border-berry text-sm"
           />
