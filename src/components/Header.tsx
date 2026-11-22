@@ -3,13 +3,21 @@
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProfileMenu from "@/components/ProfileMenu";
 
 export default function Header() {
   const { count } = useCart();
   const { count: wcount } = useWishlist();
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setIsAdmin(Boolean(d?.isAdmin)))
+      .catch(() => {});
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur bg-white/80 border-b border-slate-200">
@@ -66,7 +74,7 @@ export default function Header() {
             <Link href="/orders" onClick={() => setOpen(false)}>My Orders</Link>
             <Link href="/login" onClick={() => setOpen(false)}>Login</Link>
             <Link href="/signup" onClick={() => setOpen(false)}>Sign Up</Link>
-            <Link href="/admin" onClick={() => setOpen(false)}>Admin Dashboard</Link>
+            {isAdmin && <Link href="/admin" onClick={() => setOpen(false)}>Admin Dashboard</Link>}
           </div>
         </div>
       )}
