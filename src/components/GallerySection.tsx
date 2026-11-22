@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Mascot from "@/components/Mascot";
 
 type Item = { url: string; name: string };
 
@@ -68,8 +69,9 @@ export default function GallerySection() {
         {loading ? (
           <div className="text-center text-muted">Loading...</div>
         ) : items.length === 0 ? (
-          <div className="text-center text-muted py-8">
-            No photos yet — be the first to share your happy paw! 🐾
+          <div className="text-center py-8">
+            <Mascot type="dog" size="lg" anim="peek" />
+            <div className="text-muted mt-3">No photos yet — be the first to share your happy paw! 🐾</div>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useCart } from "@/lib/cart-context";
 import type { Product } from "@/lib/products";
+import Mascot from "@/components/Mascot";
 
 export default function WishlistPage() {
   const { items, remove, clear } = useWishlist();
@@ -30,7 +31,7 @@ export default function WishlistPage() {
   if (wishedProducts.length === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <div className="text-6xl mb-4">🤍</div>
+        <div className="mb-4"><Mascot type="cat" size="lg" anim="wiggle" /></div>
         <h1 className="text-3xl font-extrabold text-navy">Your wishlist is empty</h1>
         <p className="text-slate-500 mt-2">Save favourites by tapping the heart on any product.</p>
         <Link href="/products" className="inline-block mt-6 px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition">

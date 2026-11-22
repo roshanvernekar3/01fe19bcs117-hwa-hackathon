@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
+import Mascot from "@/components/Mascot";
 
 export default function CartPage() {
   const { items, remove, setQty, total, clear } = useCart();
@@ -11,8 +12,8 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <div className="text-6xl mb-4">🛒</div>
-        <h1 className="text-3xl font-extrabold text-navy">Your cart is empty</h1>
+      <div className="mb-4"><Mascot type="dog" size="lg" anim="wiggle" /></div>
+      <h1 className="text-3xl font-extrabold text-navy">Your cart is empty</h1>
         <p className="text-slate-500 mt-2">Looks like you haven&apos;t added anything yet.</p>
         <Link href="/products" className="inline-block mt-6 px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition">
           Start Shopping

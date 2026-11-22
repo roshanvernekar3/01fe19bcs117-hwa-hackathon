@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Mascot from "@/components/Mascot";
 
 type Review = { id: string; name: string; rating: number; text: string; createdAt: string };
 
@@ -63,8 +64,9 @@ export default function ReviewsSection() {
         {loading ? (
           <div className="text-center text-muted">Loading...</div>
         ) : reviews.length === 0 ? (
-          <div className="text-center text-muted py-8">
-            No reviews yet — be the first to share your experience!
+          <div className="text-center py-8">
+            <Mascot type="cat" size="lg" anim="peek" />
+            <div className="text-muted mt-3">No reviews yet — be the first to share your experience!</div>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

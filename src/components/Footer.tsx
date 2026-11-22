@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Mascot from "@/components/Mascot";
 
 export default function Footer() {
   return (
@@ -38,8 +39,10 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      <div className="border-t border-slate-700 py-4 text-center text-xs text-slate-500">
+      <div className="border-t border-slate-700 py-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+        <Mascot type="dog" size="sm" anim="peek" />
         © {new Date().getFullYear()} PAWBERRY. All rights reserved.
+        <Mascot type="cat" size="sm" anim="peek" />
       </div>
     </footer>
   );

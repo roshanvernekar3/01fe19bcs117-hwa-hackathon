@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/lib/products";
 import { useCart } from "@/lib/cart-context";
+import Mascot from "@/components/Mascot";
 
 type PetType = "dog" | "cat";
 type Age = "young" | "adult" | "senior";
@@ -270,7 +271,10 @@ export default function PawPlayMatch() {
               ))}
             </div>
             {results.length === 0 && (
-              <div className="text-center text-muted py-10">No matches found. Try different activities.</div>
+              <div className="text-center py-10">
+                <Mascot type="dog" size="lg" anim="peek" />
+                <div className="text-muted mt-3">No matches found. Try different activities.</div>
+              </div>
             )}
             <div className="mt-8 flex gap-3 justify-center">
               <button onClick={reset} className="px-6 py-2.5 rounded-full border border-slate-200 text-navy font-semibold hover:bg-white transition">

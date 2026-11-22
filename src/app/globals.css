@@ -63,6 +63,17 @@
 .animate-pet-sway { animation: pet-sway 3.2s ease-in-out infinite; }
 .animate-paw-drift { animation: paw-drift 7s ease-in-out infinite; }
 
+@keyframes peek {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-peek { animation: peek 2.4s ease-in-out infinite; }
+.animate-bounce-soft { animation: bounce-soft 1.6s ease-in-out infinite; }
+
 .perspective-1000 { perspective: 1000px; }
 .preserve-3d { transform-style: preserve-3d; }
 .tilt-3d { transition: transform 0.4s cubic-bezier(.2,.8,.2,1); will-change: transform; }
