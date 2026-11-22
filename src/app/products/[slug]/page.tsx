@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getProduct, byCategory } from "@/lib/products";
 import AddToCart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
+import Reveal from "@/components/Reveal";
 
 export default async function ProductDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -11,6 +12,26 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
   if (!product) notFound();
 
   const related = byCategory(product.category).filter((p) => p.slug !== slug).slice(0, 4);
+
+  const isToy = product.category === "interactive-toys";
+  const stepsTitle = isToy ? "How to Play" : "How to Use";
+  const steps = isToy
+    ? [
+        { title: "Introduce", desc: "Place the toy near your pet and let them sniff and explore at their own pace.", emoji: "👃" },
+        { title: "Activate", desc: "Turn it on or hide a treat to spark curiosity and get them moving.", emoji: "⚡" },
+        { title: "Play together", desc: "Join the fun, praise and reward your pet for engaging.", emoji: "🎉" },
+      ]
+    : product.category === "pet-houses"
+    ? [
+        { title: "Set up", desc: "Assemble and place the house in a quiet, cozy corner of your home.", emoji: "🛠️" },
+        { title: "Add comfort", desc: "Line it with a soft blanket or cushion for extra warmth.", emoji: "🛏️" },
+        { title: "Invite", desc: "Encourage your pet with treats to explore and claim their new den.", emoji: "🐾" },
+      ]
+    : [
+        { title: "Prepare", desc: "Fill with your preferred litter and place in a well-ventilated spot.", emoji: "🧹" },
+        { title: "Introduce", desc: "Let your cat explore the station freely and get comfortable.", emoji: "🐱" },
+        { title: "Maintain", desc: "Scoop daily and refresh litter weekly to keep it fresh.", emoji: "✨" },
+      ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -42,6 +63,23 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
             </ul>
           </div>
 
+          {/* How to Play / Use */}
+          <div className="mt-8">
+            <h3 className="font-semibold text-navy mb-3">{stepsTitle}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {steps.map((s, i) => (
+                <div key={s.title} className="bg-gradient-to-br from-cream to-blush rounded-2xl p-4 border border-white hover-lift">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-7 h-7 rounded-full bg-berry text-white text-sm font-bold flex items-center justify-center">{i + 1}</span>
+                    <span className="text-2xl">{s.emoji}</span>
+                  </div>
+                  <div className="font-bold text-navy text-sm">{s.title}</div>
+                  <p className="text-slate-600 text-xs mt-1 leading-relaxed">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="mt-8">
             <AddToCart product={product} />
           </div>
@@ -55,14 +93,18 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
       </div>
 
       {related.length > 0 && (
-        <section className="mt-20">
-          <h2 className="text-2xl font-extrabold text-navy mb-6">You may also like</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {related.map((p) => (
-              <ProductCard key={p.id} p={p} />
-            ))}
-          </div>
-        </section>
+        <Reveal>
+          <section className="mt-20">
+            <h2 className="text-2xl font-extrabold text-navy mb-6">You may also like</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {related.map((p) => (
+                <div key={p.id} className="hover-lift">
+                  <ProductCard p={p} />
+                </div>
+              ))}
+            </div>
+          </section>
+        </Reveal>
       )}
     </div>
   );
