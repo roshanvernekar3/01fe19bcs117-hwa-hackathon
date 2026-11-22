@@ -2,6 +2,9 @@ import Link from "next/link";
 import { PRODUCTS, CATEGORIES } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
+import GallerySection from "@/components/GallerySection";
+import ReviewsSection from "@/components/ReviewsSection";
+import NewsletterSection from "@/components/NewsletterSection";
 
 export default function Home() {
   const featured = PRODUCTS.slice(0, 4);
@@ -173,33 +176,71 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About */}
+      {/* Why PAWBERRY */}
       <section id="about" className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <div>
+            <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-extrabold text-navy">Why PAWBERRY?</h2>
-              <p className="text-muted mt-4 leading-relaxed">
-                We believe every pet deserves joy, comfort and a clean home — without breaking the bank. Our products are tested by real pets and real families.
+              <p className="text-muted mt-2 max-w-2xl mx-auto">
+                We believe every pet deserves joy, comfort and a clean home — without breaking the bank. Our products are designed with love, tested by real pets, and built to last.
               </p>
-              <ul className="mt-6 space-y-3 text-navy/80">
-                <li className="flex gap-3"><span className="text-berry">✓</span> Affordable premium quality</li>
-                <li className="flex gap-3"><span className="text-berry">✓</span> Vet-approved materials</li>
-                <li className="flex gap-3"><span className="text-berry">✓</span> 30-day hassle-free returns</li>
-                <li className="flex gap-3"><span className="text-berry">✓</span> Free shipping over ₹1000</li>
-              </ul>
             </div>
           </Reveal>
-          <Reveal delay={150}>
-            <div className="grid grid-cols-2 gap-4 perspective-1000">
-              <div className="bg-gradient-to-br from-blush to-peach rounded-3xl h-40 flex items-center justify-center text-6xl animate-pet-bob preserve-3d tilt-3d">🐶</div>
-              <div className="bg-gradient-to-br from-sage to-cream rounded-3xl h-40 flex items-center justify-center text-6xl mt-6 animate-float-slow preserve-3d tilt-3d">🐱</div>
-              <div className="bg-gradient-to-br from-peach to-blush rounded-3xl h-40 flex items-center justify-center text-6xl animate-float-slow preserve-3d tilt-3d">🏠</div>
-              <div className="bg-gradient-to-br from-cream to-sage rounded-3xl h-40 flex items-center justify-center text-6xl mt-6 animate-pet-bob preserve-3d tilt-3d">🛁</div>
-            </div>
-          </Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { emoji: "💡", title: "Innovative Design", desc: "Smart, thoughtful products that spark curiosity and play." },
+              { emoji: "💰", title: "Honest Prices", desc: "Premium quality at prices every family can afford." },
+              { emoji: "🌿", title: "Safe Materials", desc: "Vet-friendly, non-toxic materials you can trust." },
+              { emoji: "🚚", title: "Fast & Free Ship", desc: "Quick delivery with free shipping over ₹1000." },
+              { emoji: "↩️", title: "Easy Returns", desc: "30-day hassle-free returns, no questions asked." },
+              { emoji: "🐾", title: "Pet-Tested", desc: "Every product tried and approved by real pets." },
+              { emoji: "🧼", title: "Easy to Clean", desc: "Machine-washable and quick-clean designs." },
+              { emoji: "❤️", title: "Made with Love", desc: "Crafted by a team that adores animals." },
+            ].map((f, i) => (
+              <Reveal key={f.title} delay={i * 60}>
+                <div className="bg-white/80 rounded-2xl p-5 border border-white hover-lift h-full">
+                  <div className="text-3xl mb-2">{f.emoji}</div>
+                  <div className="font-bold text-navy">{f.title}</div>
+                  <p className="text-muted text-sm mt-1">{f.desc}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
+
+      {/* Gift Collections */}
+      <section className="py-20 bg-white/60 backdrop-blur">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-extrabold text-navy">Gift Collections</h2>
+              <p className="text-muted mt-2">Curated bundles that make tails wag and whiskers twitch.</p>
+            </div>
+          </Reveal>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { emoji: "🎁", title: "Playtime Bundle", desc: "Interactive toys for endless fun.", href: "/products?category=interactive-toys", grad: "from-blush to-peach" },
+              { emoji: "🏠", title: "Cozy Home Bundle", desc: "Houses and hideouts for sweet dreams.", href: "/products?category=pet-houses", grad: "from-sage to-cream" },
+              { emoji: "🛁", title: "Fresh & Clean Bundle", desc: "Washroom essentials for a tidy home.", href: "/products?category=cat-washrooms", grad: "from-peach to-blush" },
+            ].map((g, i) => (
+              <Reveal key={g.title} delay={i * 100}>
+                <Link href={g.href} className={`group block rounded-3xl bg-gradient-to-br ${g.grad} p-8 border border-white hover-lift`}>
+                  <div className="text-5xl mb-3 group-hover:scale-110 transition">{g.emoji}</div>
+                  <h3 className="text-xl font-bold text-navy">{g.title}</h3>
+                  <p className="text-navy/70 text-sm mt-1">{g.desc}</p>
+                  <span className="mt-4 inline-block text-berry font-semibold text-sm group-hover:translate-x-1 transition">Shop bundle →</span>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <GallerySection />
+      <ReviewsSection />
+      <NewsletterSection />
 
       {/* Contact */}
       <Reveal>
