@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useState } from "react";
+import ProfileMenu from "@/components/ProfileMenu";
 
 export default function Header() {
   const { count } = useCart();
@@ -28,6 +29,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
+          <ProfileMenu />
           <Link href="/wishlist" className="relative inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition">
             <span className="text-xl">♡</span>
             {wcount > 0 && (
@@ -60,6 +62,11 @@ export default function Header() {
             <Link href="/products?category=interactive-toys" onClick={() => setOpen(false)}>Interactive Toys</Link>
             <Link href="/products?category=pet-houses" onClick={() => setOpen(false)}>Pet Houses</Link>
             <Link href="/products?category=cat-washrooms" onClick={() => setOpen(false)}>Cat Washrooms</Link>
+            <Link href="/profile" onClick={() => setOpen(false)}>My Profile</Link>
+            <Link href="/orders" onClick={() => setOpen(false)}>My Orders</Link>
+            <Link href="/login" onClick={() => setOpen(false)}>Login</Link>
+            <Link href="/signup" onClick={() => setOpen(false)}>Sign Up</Link>
+            <Link href="/admin" onClick={() => setOpen(false)}>Admin Dashboard</Link>
           </div>
         </div>
       )}
