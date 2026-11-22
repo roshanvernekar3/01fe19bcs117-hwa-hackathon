@@ -55,6 +55,8 @@ export default function Header() {
           <div className="px-4 py-3 flex flex-col gap-3 text-sm font-medium">
             <Link href="/products" onClick={() => setOpen(false)}>Shop All</Link>
             <Link href="/pawplay" onClick={() => setOpen(false)}>PawPlay Match</Link>
+            <Link href="/wishlist" onClick={() => setOpen(false)}>Wishlist ({wcount})</Link>
+            <Link href="/cart" onClick={() => setOpen(false)}>Cart ({count})</Link>
             <Link href="/products?category=interactive-toys" onClick={() => setOpen(false)}>Interactive Toys</Link>
             <Link href="/products?category=pet-houses" onClick={() => setOpen(false)}>Pet Houses</Link>
             <Link href="/products?category=cat-washrooms" onClick={() => setOpen(false)}>Cat Washrooms</Link>

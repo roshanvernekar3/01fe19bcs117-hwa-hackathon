@@ -75,6 +75,7 @@ export default function GallerySection() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {items.map((it) => (
               <div key={it.url} className="relative aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition hover-lift">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={it.url} alt="happy paw" className="w-full h-full object-cover" />
               </div>
             ))}

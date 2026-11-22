@@ -26,18 +26,20 @@ export default function CartPage() {
       <div className="md:col-span-2 space-y-4">
         <h1 className="text-3xl font-extrabold text-navy mb-4">Your Cart</h1>
         {items.map((i) => (
-          <div key={i.slug} className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-slate-100">
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-3xl">{i.emoji}</div>
-            <div className="flex-1">
-              <div className="font-bold text-navy">{i.name}</div>
-              <div className="text-berry font-semibold">₹{i.price}</div>
+          <div key={i.slug} className="flex flex-wrap items-center gap-3 bg-white rounded-2xl p-4 border border-slate-100">
+            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-cream to-blush flex items-center justify-center text-2xl flex-shrink-0">
+              {i.emoji}
+            </div>
+            <div className="flex-1 min-w-[120px]">
+              <div className="font-bold text-navy text-sm">{i.name}</div>
+              <div className="text-berry font-semibold text-sm">₹{i.price}</div>
             </div>
             <div className="flex items-center border border-slate-200 rounded-full overflow-hidden">
               <button onClick={() => setQty(i.slug, i.qty - 1)} className="px-3 py-1 hover:bg-slate-100">−</button>
               <span className="px-3 py-1 font-semibold">{i.qty}</span>
               <button onClick={() => setQty(i.slug, i.qty + 1)} className="px-3 py-1 hover:bg-slate-100">+</button>
             </div>
-            <div className="font-bold text-navy w-20 text-right">₹{i.price * i.qty}</div>
+            <div className="font-bold text-navy text-sm">₹{i.price * i.qty}</div>
             <button onClick={() => remove(i.slug)} className="text-slate-400 hover:text-red-500 text-xl" aria-label="remove">×</button>
           </div>
         ))}
