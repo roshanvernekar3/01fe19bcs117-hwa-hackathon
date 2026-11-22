@@ -64,6 +64,9 @@ export async function POST(req: NextRequest) {
       shipping: Number(shipping.toFixed(2)),
       total: Number(total.toFixed(2)),
       notes: body?.notes,
+      paymentMethod: body?.paymentMethod === "razorpay" ? "razorpay" : "cod",
+      paymentStatus: body?.paymentStatus === "paid" ? "paid" : "pending",
+      paymentId: body?.paymentId,
     });
     return NextResponse.json({ success: true, orderId: order.id, order }, { status: 201 });
   } catch {

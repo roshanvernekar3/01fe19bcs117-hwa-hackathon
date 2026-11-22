@@ -33,7 +33,13 @@ function ConfirmationInner() {
             {order.customer.city}, {order.customer.zip}<br />
             {order.customer.country}
           </div>
-          <div className="mt-4 font-bold text-navy">Total: <span className="text-berry">₹{order.total}</span></div>
+          <div className="mt-4 flex justify-between text-sm">
+            <span className="text-slate-500">Payment</span>
+            <span className="font-semibold text-navy capitalize">
+              {order.paymentMethod === "razorpay" ? "Paid online (Razorpay)" : "Cash on Delivery"} · {order.paymentStatus}
+            </span>
+          </div>
+          <div className="mt-2 font-bold text-navy">Total: <span className="text-berry">₹{order.total}</span></div>
         </div>
       )}
       <div className="mt-8 flex gap-3 justify-center">

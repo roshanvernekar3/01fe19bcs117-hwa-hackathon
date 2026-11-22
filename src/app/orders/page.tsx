@@ -63,6 +63,9 @@ export default function OrdersPage() {
           <div className="mt-4 text-sm text-slate-600">
             {order.customer.name}<br />{order.customer.address}, {order.customer.city} {order.customer.zip}
           </div>
+          <div className="mt-2 text-xs text-slate-500 capitalize">
+            Payment: {order.paymentMethod === "razorpay" ? "Paid online" : "Cash on delivery"} · {order.paymentStatus}
+          </div>
         </div>
       )}
 

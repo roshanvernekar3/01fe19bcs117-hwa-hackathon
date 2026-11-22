@@ -7,6 +7,7 @@ export type OrderItem = {
   qty: number;
 };
 
+export type PaymentMethod = "cod" | "razorpay";
 export type Order = {
   id: string;
   createdAt: string;
@@ -24,6 +25,9 @@ export type Order = {
   shipping: number;
   total: number;
   status: "received" | "processing" | "shipped" | "delivered";
+  paymentMethod: PaymentMethod;
+  paymentStatus: "pending" | "paid" | "failed";
+  paymentId?: string;
   notes?: string;
 };
 
@@ -31,9 +35,11 @@ function genId() {
   return "PB-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
-export async function saveOrder(input: Omit<Order, "id" | "createdAt" | "status">): Promise<Order> {
+export async function saveOrder(input: Omit<Order, "id" | "createdAt" | "status"> & Partial<Pick<Order, "paymentMethod" | "paymentStatus" | "paymentId">>): Promise<Order> {
   const order: Order = {
     ...input,
+    paymentMethod: input.paymentMethod ?? "cod",
+    paymentStatus: input.paymentStatus ?? "pending",
     id: genId(),
     createdAt: new Date().toISOString(),
     status: "received",
