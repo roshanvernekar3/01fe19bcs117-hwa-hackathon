@@ -111,6 +111,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* PawPlay Match banner */}
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <Link href="/pawplay" className="block relative overflow-hidden rounded-3xl bg-gradient-to-r from-berry to-peach p-8 md:p-10 text-white hover-lift">
+              <div className="relative z-10 max-w-lg">
+                <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-semibold mb-3">New ✨</span>
+                <h2 className="text-3xl md:text-4xl font-extrabold leading-tight">PawPlay Match</h2>
+                <p className="mt-2 text-white/90">Answer 4 quick questions and we&apos;ll fetch the perfect products for your pet. Add them to your cart in one tap.</p>
+                <span className="mt-5 inline-block px-6 py-3 rounded-full bg-white text-berry font-semibold">Start Matching →</span>
+              </div>
+              <div className="absolute right-6 bottom-0 text-[160px] opacity-30 select-none hidden md:block">🐾</div>
+            </Link>
+          </Reveal>
+        </div>
+      </section>
+
       {/* Featured */}
       <section className="bg-white/60 backdrop-blur py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

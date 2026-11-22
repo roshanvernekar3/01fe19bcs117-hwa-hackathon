@@ -18,6 +18,7 @@ export default function Header() {
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
           <Link href="/products" className="hover:text-berry transition">Shop</Link>
+          <Link href="/pawplay" className="hover:text-berry transition">PawPlay Match</Link>
           <Link href="/products?category=interactive-toys" className="hover:text-berry transition">Toys</Link>
           <Link href="/products?category=pet-houses" className="hover:text-berry transition">Houses</Link>
           <Link href="/products?category=cat-washrooms" className="hover:text-berry transition">Washrooms</Link>
@@ -43,6 +44,7 @@ export default function Header() {
         <div className="md:hidden border-t border-slate-200 bg-white">
           <div className="px-4 py-3 flex flex-col gap-3 text-sm font-medium">
             <Link href="/products" onClick={() => setOpen(false)}>Shop All</Link>
+            <Link href="/pawplay" onClick={() => setOpen(false)}>PawPlay Match</Link>
             <Link href="/products?category=interactive-toys" onClick={() => setOpen(false)}>Interactive Toys</Link>
             <Link href="/products?category=pet-houses" onClick={() => setOpen(false)}>Pet Houses</Link>
             <Link href="/products?category=cat-washrooms" onClick={() => setOpen(false)}>Cat Washrooms</Link>
