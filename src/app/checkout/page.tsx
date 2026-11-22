@@ -14,7 +14,7 @@ export default function CheckoutPage() {
     name: "", email: "", phone: "", address: "", city: "", zip: "", country: "United States", notes: "",
   });
 
-  const shipping = total >= 75 || total === 0 ? 0 : 6.99;
+  const shipping = total >= 1000 || total === 0 ? 0 : 49;
   const grand = total + shipping;
 
   if (items.length === 0) {
@@ -81,7 +81,7 @@ export default function CheckoutPage() {
           disabled={submitting}
           className="w-full px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition disabled:opacity-60"
         >
-          {submitting ? "Placing order..." : `Place Order • $${grand.toFixed(2)}`}
+          {submitting ? "Placing order..." : `Place Order • ₹${grand}`}
         </button>
       </form>
 
@@ -91,14 +91,14 @@ export default function CheckoutPage() {
           {items.map((i) => (
             <div key={i.slug} className="flex justify-between">
               <span>{i.name} ×{i.qty}</span>
-              <span>${(i.price * i.qty).toFixed(2)}</span>
+              <span>₹{i.price * i.qty}</span>
             </div>
           ))}
         </div>
         <div className="border-t border-slate-200 pt-3 mt-3 space-y-1 text-sm">
-          <div className="flex justify-between"><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
-          <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span></div>
-          <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="text-berry">${grand.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Subtotal</span><span>₹{total}</span></div>
+          <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? "Free" : `₹${shipping}`}</span></div>
+          <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="text-berry">₹{grand}</span></div>
         </div>
       </div>
     </div>

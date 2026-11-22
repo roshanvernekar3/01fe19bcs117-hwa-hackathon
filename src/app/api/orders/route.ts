@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     }));
 
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-    const shipping = subtotal >= 75 || subtotal === 0 ? 0 : 6.99;
+    const shipping = subtotal >= 1000 || subtotal === 0 ? 0 : 49;
     const total = subtotal + shipping;
     const order = await saveOrder({
       customer,

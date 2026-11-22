@@ -56,7 +56,7 @@ export default function Home() {
             <div className="mt-10 flex items-center gap-8 text-sm text-muted">
               <div><span className="font-bold text-navy text-lg">10k+</span><br />happy pets</div>
               <div><span className="font-bold text-navy text-lg">4.8★</span><br />avg rating</div>
-              <div><span className="font-bold text-navy text-lg">Free</span><br />ship $75+</div>
+              <div><span className="font-bold text-navy text-lg">Free</span><br />ship ₹1000+</div>
             </div>
           </Reveal>
 
@@ -169,7 +169,7 @@ export default function Home() {
                 <li className="flex gap-3"><span className="text-berry">✓</span> Affordable premium quality</li>
                 <li className="flex gap-3"><span className="text-berry">✓</span> Vet-approved materials</li>
                 <li className="flex gap-3"><span className="text-berry">✓</span> 30-day hassle-free returns</li>
-                <li className="flex gap-3"><span className="text-berry">✓</span> Free shipping over $75</li>
+                <li className="flex gap-3"><span className="text-berry">✓</span> Free shipping over ₹1000</li>
               </ul>
             </div>
           </Reveal>

@@ -53,12 +53,12 @@ export default function OrdersPage() {
             {order.items.map((i) => (
               <div key={i.slug} className="flex justify-between">
                 <span>{i.name} ×{i.qty}</span>
-                <span>${(i.price * i.qty).toFixed(2)}</span>
+                <span>₹{i.price * i.qty}</span>
               </div>
             ))}
           </div>
           <div className="border-t border-slate-200 pt-3 mt-3 flex justify-between font-bold">
-            <span>Total</span><span className="text-berry">${order.total.toFixed(2)}</span>
+            <span>Total</span><span className="text-berry">₹{order.total}</span>
           </div>
           <div className="mt-4 text-sm text-slate-600">
             {order.customer.name}<br />{order.customer.address}, {order.customer.city} {order.customer.zip}

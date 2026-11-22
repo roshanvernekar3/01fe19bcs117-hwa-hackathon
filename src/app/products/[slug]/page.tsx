@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getProduct, byCategory } from "@/lib/products";
 import AddToCart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
@@ -18,8 +19,8 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
       </nav>
 
       <div className="grid md:grid-cols-2 gap-10">
-        <div className={`rounded-3xl bg-gradient-to-br ${product.gradient} h-80 md:h-[480px] flex items-center justify-center text-9xl shadow-lg`}>
-          {product.emoji}
+        <div className="relative rounded-3xl overflow-hidden h-80 md:h-[480px] shadow-lg bg-gradient-to-br from-cream to-blush">
+          <Image src={product.image} alt={product.name} fill className="object-cover" sizes="(max-width:768px) 100vw, 50vw" priority />
         </div>
 
         <div>
@@ -27,7 +28,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
           <h1 className="text-3xl md:text-4xl font-extrabold text-navy">{product.name}</h1>
           <p className="text-slate-500 mt-2">{product.tagline}</p>
           <div className="mt-4 flex items-center gap-3">
-            <span className="text-3xl font-extrabold text-berry">${product.price.toFixed(2)}</span>
+            <span className="text-3xl font-extrabold text-berry">₹{product.price}</span>
             <span className="text-sm text-slate-400">★ {product.rating} ({product.reviews} reviews)</span>
           </div>
           <p className="mt-6 text-slate-700 leading-relaxed">{product.description}</p>
@@ -46,7 +47,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
           </div>
 
           <div className="mt-6 text-sm text-slate-500 space-y-1">
-            <div>🚚 Free shipping on orders over $75</div>
+            <div>🚚 Free shipping on orders over ₹1000</div>
             <div>↩️ 30-day hassle-free returns</div>
             <div>✅ In stock & ready to ship</div>
           </div>

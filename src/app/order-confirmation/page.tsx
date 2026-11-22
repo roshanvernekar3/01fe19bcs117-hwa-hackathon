@@ -33,7 +33,7 @@ function ConfirmationInner() {
             {order.customer.city}, {order.customer.zip}<br />
             {order.customer.country}
           </div>
-          <div className="mt-4 font-bold text-navy">Total: <span className="text-berry">${order.total.toFixed(2)}</span></div>
+          <div className="mt-4 font-bold text-navy">Total: <span className="text-berry">₹{order.total}</span></div>
         </div>
       )}
       <div className="mt-8 flex gap-3 justify-center">
