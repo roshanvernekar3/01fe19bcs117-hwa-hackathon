@@ -93,3 +93,22 @@ html {
 * {
   box-sizing: border-box;
 }
+
+button:not(:disabled) {
+  transition: transform 0.12s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+a, button {
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible {
+  outline: 2px solid var(--berry);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+::selection {
+  background: var(--berry);
+  color: #fff;
+}

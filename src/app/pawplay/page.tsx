@@ -51,6 +51,8 @@ export default function PawPlayMatch() {
   const [showResults, setShowResults] = useState(false);
   const [added, setAdded] = useState<Record<string, boolean>>({});
 
+  const loadingProducts = products.length === 0;
+
   useEffect(() => {
     fetch("/api/products", { cache: "no-store" })
       .then((r) => r.json())
@@ -226,10 +228,10 @@ export default function PawPlayMatch() {
               </button>
               <button
                 onClick={next}
-                disabled={!canNext()}
+                disabled={!canNext() || loadingProducts}
                 className="px-6 py-2.5 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition disabled:opacity-40 shadow-lg shadow-berry/20"
               >
-                {step === 3 ? "See Matches" : "Next"}
+                {loadingProducts ? "Loading..." : step === 3 ? "See Matches" : "Next"}
               </button>
             </div>
           </div>
