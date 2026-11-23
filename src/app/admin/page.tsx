@@ -7,6 +7,21 @@ import PawLoader from "@/components/PawLoader";
 
 type OrderStatus = "received" | "processing" | "shipped" | "delivered" | "cancelled";
 
+type ComplaintStatus = "open" | "in-progress" | "resolved" | "closed";
+
+type Complaint = {
+  id: string;
+  userEmail: string;
+  userName: string;
+  topic: string;
+  orderId?: string;
+  message: string;
+  status: ComplaintStatus;
+  replies?: { id: string; author: string; authorName: string; message: string; createdAt: string }[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 type AdminOrder = {
   id: string;
   createdAt: string;
@@ -19,9 +34,11 @@ type AdminOrder = {
 };
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<"products" | "orders">("products");
+  const [tab, setTab] = useState<"products" | "orders" | "support">("products");
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
@@ -37,6 +54,24 @@ export default function AdminDashboard() {
     const res = await fetch("/api/orders", { cache: "no-store" });
     const d = await res.json();
     setOrders(d.orders || []);
+  }
+  async function loadComplaints() {
+    const res = await fetch("/api/admin/support", { cache: "no-store" });
+    const d = await res.json();
+    setComplaints(d.complaints || []);
+  }
+  async function replyToComplaint(c: Complaint, message: string) {
+    const res = await fetch("/api/admin/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: c.id, message }) });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error || "Could not reply");
+    await loadComplaints();
+    return d.complaint;
+  }
+  async function updateComplaintStatus(id: string, status: ComplaintStatus) {
+    const res = await fetch("/api/admin/support", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error || "Could not update status");
+    await loadComplaints();
   }
 
   async function updateOrderStatus(id: string, status: OrderStatus) {
@@ -62,6 +97,7 @@ export default function AdminDashboard() {
     (async () => {
       await loadProducts();
       await loadOrders();
+      await loadComplaints();
       setLoading(false);
     })();
   }, []);
@@ -108,6 +144,7 @@ export default function AdminDashboard() {
       <div className="flex gap-2 mb-6">
         <button onClick={() => setTab("products")} className={`px-4 py-2 rounded-full text-sm font-semibold ${tab === "products" ? "bg-berry text-white" : "bg-white border border-slate-200"}`}>Products ({products.length})</button>
         <button onClick={() => setTab("orders")} className={`px-4 py-2 rounded-full text-sm font-semibold ${tab === "orders" ? "bg-berry text-white" : "bg-white border border-slate-200"}`}>Orders ({orders.length})</button>
+        <button onClick={() => setTab("support")} className={`px-4 py-2 rounded-full text-sm font-semibold ${tab === "support" ? "bg-berry text-white" : "bg-white border border-slate-200"}`}>Support ({complaints.length})</button>
       </div>
 
       {msg && <div className="mb-4 text-sm text-berry">{msg}</div>}
@@ -210,6 +247,60 @@ export default function AdminDashboard() {
                   </select>
                   <Link href={`/orders/${encodeURIComponent(o.id)}`} className="text-xs font-semibold text-berry hover:underline">Details →</Link>
                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "support" && (
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <button onClick={loadComplaints} className="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold hover:bg-slate-50">Refresh Complaints</button>
+          </div>
+          {complaints.length === 0 && <div className="text-slate-500">No complaints yet.</div>}
+          {complaints.map((c) => (
+            <div key={c.id} className="bg-white rounded-2xl p-4 border border-slate-100">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-bold text-navy">{c.id}</div>
+                  <div className="text-xs text-slate-500">{new Date(c.createdAt).toLocaleString()} · {c.userName} ({c.userEmail}) · Topic: {c.topic}</div>
+                </div>
+                <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
+                  c.status === "resolved" ? "bg-green-100 text-green-600" :
+                  c.status === "closed" ? "bg-slate-200 text-slate-600" :
+                  c.status === "in-progress" ? "bg-berry/10 text-berry" :
+                  "bg-red-100 text-red-600"
+                }`}>{c.status}</span>
+              </div>
+              {c.orderId && <div className="mt-1 text-xs text-slate-500">Order: {c.orderId}</div>}
+              <div className="mt-2 text-sm text-slate-700 bg-slate-50 rounded-xl p-3">{c.message}</div>
+              {c.replies && c.replies.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {c.replies.map((r) => (
+                    <div key={r.id} className="text-sm rounded-xl bg-slate-50 p-3">
+                      <span className="font-semibold text-xs text-berry">{r.author === "admin" ? "Support" : r.authorName}:</span>
+                      <div>{r.message}</div>
+                      <div className="text-[10px] text-slate-400">{new Date(r.createdAt).toLocaleString()}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+                <label className="text-xs text-slate-500">Status</label>
+                <select value={c.status} onChange={(e) => updateComplaintStatus(c.id, e.target.value as ComplaintStatus)} className="px-3 py-1.5 rounded-xl border border-slate-200 text-sm bg-white">
+                  <option value="open">Open</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <input
+                  value={replyDrafts[c.id] || ""}
+                  onChange={(e) => setReplyDrafts((d) => ({ ...d, [c.id]: e.target.value }))}
+                  placeholder="Reply to customer..."
+                  className="flex-1 min-w-[180px] px-3 py-1.5 rounded-xl border border-slate-200 text-sm"
+                />
+                <button onClick={async () => { const msg = (replyDrafts[c.id] || "").trim(); if (!msg) return; await replyToComplaint(c, msg); setReplyDrafts((d) => ({ ...d, [c.id]: "" })); }} className="px-4 py-1.5 rounded-full bg-berry text-white text-sm font-semibold hover:bg-berry-dark transition">Reply</button>
               </div>
             </div>
           ))}
