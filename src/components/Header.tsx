@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useState, useEffect } from "react";
@@ -12,12 +13,13 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const pathname = usePathname();
   useEffect(() => {
     fetch("/api/auth/me", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setIsAdmin(Boolean(d?.isAdmin)))
       .catch(() => {});
-  }, []);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur bg-white/80 border-b border-slate-200">

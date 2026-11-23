@@ -15,19 +15,23 @@ type WishlistContextType = {
 const WishlistContext = createContext<WishlistContextType | null>(null);
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = localStorage.getItem("pawberry-wishlist");
-      return raw ? (JSON.parse(raw) as string[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [items, setItems] = useState<string[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem("pawberry-wishlist");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (raw) setItems(JSON.parse(raw) as string[]);
+    } catch {}
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem("pawberry-wishlist", JSON.stringify(items));
-  }, [items]);
+  }, [items, hydrated]);
 
   const has = (slug: string) => items.includes(slug);
   const toggle = (slug: string) =>

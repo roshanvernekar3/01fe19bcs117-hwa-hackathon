@@ -241,18 +241,21 @@ function ProductForm({ initial, onSave, onCancel }: { initial?: Product; onSave:
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = async () => {
+    try {
+      const dataUrl = await compressImage(file, 1200, 0.82);
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: reader.result, name: file.name }),
+        body: JSON.stringify({ image: dataUrl, name: file.name }),
       });
       const d = await res.json();
       if (res.ok) update("image", d.url);
+      else alert(d.error || "Upload failed");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Upload failed");
+    } finally {
       setUploading(false);
-    };
-    reader.readAsDataURL(file);
+    }
   }
 
   return (
@@ -289,4 +292,27 @@ function ProductForm({ initial, onSave, onCancel }: { initial?: Product; onSave:
       </div>
     </div>
   );
+}
+
+
+function compressImage(file: File, maxSize: number, quality: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Could not process image"));
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read image")); };
+    img.src = url;
+  });
 }

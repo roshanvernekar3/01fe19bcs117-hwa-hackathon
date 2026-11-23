@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
     // check duplicate
-    const { blobs } = await list({ prefix: "newsletter/", limit: 100 });
+    const { blobs } = await list({ prefix: "newsletter/", limit: 1000 });
     for (const b of blobs) {
       try {
         const res = await fetch(b.url, { cache: "no-store" });

@@ -23,19 +23,23 @@ type CartContextType = {
 const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = localStorage.getItem("pawberry-cart");
-      return raw ? (JSON.parse(raw) as CartItem[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem("pawberry-cart");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (raw) setItems(JSON.parse(raw) as CartItem[]);
+    } catch {}
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem("pawberry-cart", JSON.stringify(items));
-  }, [items]);
+  }, [items, hydrated]);
 
   const add: CartContextType["add"] = (p) => {
     setItems((prev) => {

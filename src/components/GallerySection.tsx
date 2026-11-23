@@ -33,26 +33,19 @@ export default function GallerySection() {
     setUploading(true);
     setMsg("");
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const res = await fetch("/api/gallery", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: reader.result, name: file.name }),
-        });
-        const d = await res.json();
-        if (!res.ok) throw new Error(d.error || "Upload failed");
-        setMsg("Thanks for sharing! 🐾");
-        await load();
-        setUploading(false);
-      };
-      reader.onerror = () => {
-        setMsg("Could not read file.");
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      const dataUrl = await compressImage(file, 1200, 0.82);
+      const res = await fetch("/api/gallery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl, name: file.name }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Upload failed");
+      setMsg("Thanks for sharing! 🐾");
+      await load();
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "Upload failed");
+    } finally {
       setUploading(false);
     }
     if (fileRef.current) fileRef.current.value = "";
@@ -98,4 +91,27 @@ export default function GallerySection() {
       </div>
     </section>
   );
+}
+
+
+function compressImage(file: File, maxSize: number, quality: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Could not process image"));
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read image")); };
+    img.src = url;
+  });
 }
