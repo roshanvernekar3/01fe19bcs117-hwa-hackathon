@@ -18,6 +18,13 @@ export default function AddToCart({ product }: { product: Product }) {
     setTimeout(() => setAdded(false), 2000);
   }
 
+  if (!product.inStock) {
+    return (
+      <div className="px-6 py-3 rounded-full bg-slate-100 text-slate-500 font-semibold text-center">
+        Out of Stock
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center border border-slate-200 rounded-full overflow-hidden">

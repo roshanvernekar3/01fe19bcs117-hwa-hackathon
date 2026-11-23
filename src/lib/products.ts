@@ -16,6 +16,7 @@ export type Product = {
   image: string;
   features: string[];
   inStock: boolean;
+  stock?: number;
 };
 
 export const CATEGORIES: { slug: Category; name: string; emoji: string; desc: string }[] = [
@@ -56,6 +57,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/treattrek.jpeg",
     features: ["Treat dispensing", "Durable build", "Easy to clean", "Suitable for dogs & cats"],
     inStock: true,
+    stock: 12,
   },
   {
     id: "t2",
@@ -73,6 +75,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/snufflesafari.jpeg",
     features: ["Machine washable", "Non-slip base", "Multiple hide spots", "Mental stimulation"],
     inStock: true,
+    stock: 12,
   },
   {
     id: "t3",
@@ -89,6 +92,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/pawmystery.jpeg",
     features: ["Sliding compartments", "Adjustable difficulty", "Durable ABS", "Non-slip"],
     inStock: true,
+    stock: 12,
   },
   {
     id: "t4",
@@ -106,6 +110,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/wigglewobble.jpeg",
     features: ["Weighted base", "Unpredictable motion", "Durable", "Indoor/outdoor"],
     inStock: true,
+    stock: 12,
   },
   {
     id: "t5",
@@ -122,6 +127,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/pawsensation.jpeg",
     features: ["Multi-texture", "Crinkle sounds", "Lightweight", "Safe materials"],
     inStock: true,
+    stock: 12,
   },
   {
     id: "t6",
@@ -139,6 +145,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/lickalicious.jpeg",
     features: ["Suction cups", "Dishwasher safe", "Multiple textures", "Calming"],
     inStock: true,
+    stock: 12,
   },
   {
     id: "h1",
@@ -155,6 +162,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/pawhideout.jpeg",
     features: ["Soft fabric", "Enclosed design", "Machine washable", "Portable"],
     inStock: true,
+    stock: 12,
   },
   {
     id: "h2",
@@ -172,6 +180,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/pawhaven.jpeg",
     features: ["Indoor use", "Breathable fabric", "Cozy interior", "Easy assembly"],
     inStock: true,
+    stock: 12,
   },
   {
     id: "h3",
@@ -188,6 +197,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/pawnest.jpeg",
     features: ["Indoor use", "Sturdy frame", "Soft cushion", "Easy clean"],
     inStock: true,
+    stock: 12,
   },
   {
     id: "w1",
@@ -204,6 +214,7 @@ export const PRODUCTS: Product[] = [
     image: "/products/pawfresh.jpeg",
     features: ["Odor control", "Easy clean", "Enclosed design", "Durable"],
     inStock: true,
+    stock: 12,
   },
 ];
 

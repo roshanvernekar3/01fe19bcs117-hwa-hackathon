@@ -135,6 +135,7 @@ export default function AdminDashboard() {
                   <th className="p-3">Slug</th>
                   <th className="p-3">Category</th>
                   <th className="p-3">Price</th>
+                  <th className="p-3">Stock</th>
                   <th className="p-3">Actions</th>
                 </tr>
               </thead>
@@ -146,6 +147,10 @@ export default function AdminDashboard() {
                     <td className="p-3 text-slate-500">{p.slug}</td>
                     <td className="p-3">{p.category}</td>
                     <td className="p-3">₹{p.price}</td>
+                    <td className="p-3">
+                      <span className={`font-semibold ${p.inStock ? "text-green-600" : "text-red-600"}`}>{p.stock ?? (p.inStock ? "∞" : 0)}</span>
+                      {!p.inStock && <span className="ml-1 text-xs text-red-500">Out</span>}
+                    </td>
                     <td className="p-3 flex gap-2">
                       <button onClick={() => setEditing(p)} className="px-3 py-1 rounded-full border border-slate-200 hover:bg-slate-50">Edit</button>
                       <button onClick={() => deleteProduct(p.slug)} className="px-3 py-1 rounded-full border border-red-200 text-red-600 hover:bg-red-50">Delete</button>
@@ -223,6 +228,7 @@ function ProductForm({ initial, onSave, onCancel }: { initial?: Product; onSave:
     tagline: initial?.tagline || "",
     description: initial?.description || "",
     price: initial?.price ?? 0,
+    stock: initial?.stock ?? 12,
     rating: initial?.rating ?? 4.5,
     reviews: initial?.reviews ?? 0,
     badge: initial?.badge || "",
@@ -272,6 +278,7 @@ function ProductForm({ initial, onSave, onCancel }: { initial?: Product; onSave:
         </select>
         <input value={form.tagline} onChange={(e) => update("tagline", e.target.value)} placeholder="Tagline" className="px-3 py-2 rounded-xl border border-slate-200" />
         <input type="number" value={form.price} onChange={(e) => update("price", e.target.value)} placeholder="Price" className="px-3 py-2 rounded-xl border border-slate-200" />
+    <input type="number" value={form.stock} onChange={(e) => update("stock", e.target.value)} placeholder="Stock" className="px-3 py-2 rounded-xl border border-slate-200" />
         <input value={form.badge} onChange={(e) => update("badge", e.target.value)} placeholder="Badge (optional)" className="px-3 py-2 rounded-xl border border-slate-200" />
         <input value={form.emoji} onChange={(e) => update("emoji", e.target.value)} placeholder="Emoji" className="px-3 py-2 rounded-xl border border-slate-200" />
         <input value={form.image} onChange={(e) => update("image", e.target.value)} placeholder="Image URL" className="px-3 py-2 rounded-xl border border-slate-200" />

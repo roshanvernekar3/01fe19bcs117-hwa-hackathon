@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getCatalog } from "@/lib/products-store";
 import AddToCart from "@/components/AddToCart";
+import NotifyMe from "@/components/NotifyMe";
 import ProductImage from "@/components/ProductImage";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
@@ -47,6 +48,9 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
           {product.badge && <span className="inline-block text-xs font-semibold text-berry bg-berry/10 px-3 py-1 rounded-full mb-3">{product.badge}</span>}
           <h1 className="text-3xl md:text-4xl font-extrabold text-navy">{product.name}</h1>
           <p className="text-slate-500 mt-2">{product.tagline}</p>
+          {!product.inStock && (
+            <span className="inline-block mt-3 text-xs font-bold text-red-600 bg-red-100 px-3 py-1 rounded-full">Out of Stock</span>
+          )}
           <div className="mt-4 flex items-center gap-3">
             <span className="text-3xl font-extrabold text-berry">₹{product.price}</span>
             <span className="text-sm text-slate-400">★ {product.rating} ({product.reviews} reviews)</span>
@@ -80,7 +84,11 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
           </div>
 
           <div className="mt-8">
-            <AddToCart product={product} />
+            {product.inStock ? (
+              <AddToCart product={product} />
+            ) : (
+              <NotifyMe slug={product.slug} productName={product.name} />
+            )}
           </div>
 
           <div className="mt-6 text-sm text-slate-500 space-y-1">
