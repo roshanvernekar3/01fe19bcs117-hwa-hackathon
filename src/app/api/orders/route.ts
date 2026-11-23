@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveOrder, listOrders, getOrder } from "@/lib/orders";
+import { put } from "@vercel/blob";
 
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
@@ -29,6 +30,39 @@ type IncomingItem = {
   qty?: number | string;
   quantity?: number | string;
 };
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, status } = body ?? {};
+    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+    const order = await getOrder(id);
+    if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    // allow owner (by email) or admin
+    const cookie = req.cookies.get("pb_admin")?.value;
+    const isAdmin = cookie === (process.env.ADMIN_PASSWORD || "pawberry-admin");
+    const userEmail = req.cookies.get("pb_user")?.value;
+    const isOwner = userEmail && userEmail === order.customer.email;
+    if (!isAdmin && !isOwner) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // only allow cancel by owner; status changes by admin
+    if (status === "cancelled") {
+      if (!isOwner && !isAdmin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      order.status = "cancelled";
+    } else if (isAdmin && status) {
+      order.status = status;
+    } else {
+      return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+    }
+    await put(`orders/${order.id}.json`, JSON.stringify(order), {
+      access: "public",
+      contentType: "application/json",
+      addRandomSuffix: false,
+    });
+    return NextResponse.json({ order });
+  } catch {
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {

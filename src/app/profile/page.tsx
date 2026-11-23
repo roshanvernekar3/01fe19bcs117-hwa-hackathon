@@ -2,21 +2,53 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { Order } from "@/lib/orders";
 
 type Me = { user: { email: string; name: string; role: string } | null; isAdmin: boolean };
 
 export default function ProfilePage() {
   const [me, setMe] = useState<Me | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"profile" | "orders" | "wishlist">("profile");
+  const [cancelling, setCancelling] = useState<string | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => setMe(d))
-      .catch(() => setMe({ user: null, isAdmin: false }))
-      .finally(() => setLoading(false));
+    (async () => {
+      try {
+        const m = await fetch("/api/auth/me", { cache: "no-store" }).then((r) => r.json());
+        setMe(m);
+        if (m?.user?.email) {
+          const res = await fetch("/api/orders/mine", { cache: "no-store" });
+          if (res.ok) {
+            const d = await res.json();
+            setOrders(d.orders || []);
+          }
+        }
+      } catch {}
+      setLoading(false);
+    })();
   }, []);
+
+  async function cancelOrder(id: string) {
+    if (!confirm("Cancel this order?")) return;
+    setCancelling(id);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "cancelled" }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Failed");
+      setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "cancelled" } : o)));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setCancelling(null);
+    }
+  }
 
   if (loading) return <div className="p-10 text-center text-slate-500">Loading...</div>;
 
@@ -34,38 +66,103 @@ export default function ProfilePage() {
     );
   }
 
+  const user = me.user;
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-extrabold text-navy mb-6">My Profile</h1>
-      <div className="bg-white rounded-2xl p-6 border border-slate-100">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-3xl">👤</div>
-          <div>
-            <div className="font-bold text-navy text-lg">{me.user.name}</div>
-            <div className="text-slate-500 text-sm">{me.user.email}</div>
-            <div className="text-xs text-berry font-semibold capitalize mt-1">{me.user.role}{me.isAdmin ? " · admin" : ""}</div>
-          </div>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* Header card */}
+      <div className="bg-white rounded-3xl p-6 border border-slate-100 mb-6 flex flex-col sm:flex-row items-center gap-5">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl flex-shrink-0">👤</div>
+        <div className="flex-1 text-center sm:text-left">
+          <h1 className="text-2xl font-extrabold text-navy">{user.name}</h1>
+          <p className="text-slate-500 text-sm">{user.email}</p>
+          <span className="inline-block mt-2 text-xs font-semibold text-berry bg-berry/10 px-3 py-1 rounded-full capitalize">{user.role}</span>
         </div>
-        <div className="grid sm:grid-cols-2 gap-3 mt-6">
-          <Link href="/orders" className="p-4 rounded-2xl bg-cream border border-slate-100 hover-lift">
-            <div className="text-2xl mb-1">📦</div>
-            <div className="font-bold text-navy">My Orders</div>
-            <div className="text-xs text-slate-500">Track your purchases</div>
-          </Link>
-          <Link href="/wishlist" className="p-4 rounded-2xl bg-cream border border-slate-100 hover-lift">
-            <div className="text-2xl mb-1">♡</div>
-            <div className="font-bold text-navy">Wishlist</div>
-            <div className="text-xs text-slate-500">Saved favourites</div>
-          </Link>
-          {me.isAdmin && (
-            <Link href="/admin" className="p-4 rounded-2xl bg-cream border border-slate-100 hover-lift">
-              <div className="text-2xl mb-1">🛠️</div>
-              <div className="font-bold text-navy">Admin Dashboard</div>
-              <div className="text-xs text-slate-500">Manage products & orders</div>
-            </Link>
-          )}
+        <div className="flex gap-2">
+          <Link href="/orders" className="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold hover:bg-slate-50">Track Order</Link>
         </div>
       </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-slate-200">
+        {(["profile", "orders", "wishlist"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 text-sm font-semibold capitalize border-b-2 -mb-px transition ${tab === t ? "border-berry text-berry" : "border-transparent text-slate-500 hover:text-navy"}`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === "profile" && (
+        <div className="bg-white rounded-2xl p-6 border border-slate-100">
+          <h2 className="text-xl font-bold text-navy mb-4">Account Details</h2>
+          <div className="grid sm:grid-cols-2 gap-4 text-sm">
+            <div><span className="text-slate-500">Name</span><div className="font-semibold text-navy">{user.name}</div></div>
+            <div><span className="text-slate-500">Email</span><div className="font-semibold text-navy">{user.email}</div></div>
+            <div><span className="text-slate-500">Role</span><div className="font-semibold text-navy capitalize">{user.role}</div></div>
+            <div><span className="text-slate-500">Member since</span><div className="font-semibold text-navy">{new Date().toLocaleDateString()}</div></div>
+          </div>
+          <div className="mt-6">
+            <Link href="/orders" className="text-berry font-semibold hover:underline">View all orders →</Link>
+          </div>
+        </div>
+      )}
+
+      {tab === "orders" && (
+        <div className="space-y-3">
+          {orders.length === 0 ? (
+            <div className="text-center py-12 text-slate-500">
+              <div className="text-5xl mb-3">📦</div>
+              No orders yet. <Link href="/products" className="text-berry font-semibold hover:underline">Start shopping</Link>
+            </div>
+          ) : (
+            orders.map((o) => (
+              <div key={o.id} className="bg-white rounded-2xl p-5 border border-slate-100">
+                <div className="flex flex-wrap justify-between items-start gap-2">
+                  <div>
+                    <div className="font-bold text-navy">{o.id}</div>
+                    <div className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString()}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-berry">₹{o.total}</div>
+                    <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
+                      o.status === "cancelled" ? "bg-red-100 text-red-600" :
+                      o.status === "delivered" ? "bg-green-100 text-green-600" :
+                      "bg-berry/10 text-berry"
+                    }`}>{o.status}</span>
+                  </div>
+                </div>
+                <div className="mt-3 text-sm text-slate-700">
+                  {o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}
+                </div>
+                <div className="mt-2 text-xs text-slate-500">
+                  {o.customer.address}, {o.customer.city} {o.customer.zip}
+                </div>
+                {o.status !== "cancelled" && o.status !== "delivered" && o.status !== "shipped" && (
+                  <button
+                    onClick={() => cancelOrder(o.id)}
+                    disabled={cancelling === o.id}
+                    className="mt-3 text-xs text-red-600 hover:underline disabled:opacity-50"
+                  >
+                    {cancelling === o.id ? "Cancelling..." : "Cancel order"}
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {tab === "wishlist" && (
+        <div className="text-center py-8">
+          <Link href="/wishlist" className="px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition">
+            View Wishlist
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

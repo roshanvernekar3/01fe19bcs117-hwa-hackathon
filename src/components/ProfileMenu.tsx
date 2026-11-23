@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 type Me = { user: { email: string; name: string; role: string } | null; isAdmin: boolean };
@@ -19,9 +20,13 @@ export default function ProfileMenu() {
     }
   }
 
+  const pathname = usePathname();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
+  }, [pathname]);
+
+  useEffect(() => {
     function onClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }

@@ -24,7 +24,7 @@ export type Order = {
   subtotal: number;
   shipping: number;
   total: number;
-  status: "received" | "processing" | "shipped" | "delivered";
+  status: "received" | "processing" | "shipped" | "delivered" | "cancelled";
   paymentMethod: PaymentMethod;
   paymentStatus: "pending" | "paid" | "failed";
   paymentId?: string;
