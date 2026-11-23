@@ -229,6 +229,7 @@ export default function ProfilePage() {
               >
                 {savingAvatar ? "Saving..." : "Save Avatar"}
               </button>
+              {avatar && (avatar.startsWith("http") || avatar.startsWith("data:")) && (
               <button
                 onClick={async () => {
                   setAvatarMsg(null);
@@ -254,6 +255,7 @@ export default function ProfilePage() {
               >
                 {savingAvatar ? "Removing..." : "Remove Photo"}
               </button>
+              )}
             </div>
             {avatarMsg && (
               <p className={`mt-3 text-sm ${avatarMsg.includes("saved") ? "text-green-600" : "text-red-500"}`}>{avatarMsg}</p>
