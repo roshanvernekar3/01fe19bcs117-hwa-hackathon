@@ -209,3 +209,8 @@ a, button {
 .animate-mascot-tail { animation: mascot-tail 0.9s ease-in-out infinite; transform-origin: bottom right; }
 .animate-toy-drift { animation: toy-drift 4s ease-in-out infinite; }
 .animate-text-pop { animation: text-pop 0.4s ease both; }
+@keyframes pawberry-fly-anim {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(var(--paw-fly-dx, 0px), var(--paw-fly-dy, 0px)); }
+}
+.pawberry-fly { animation-name: pawberry-fly-anim; animation-duration: 0.55s; animation-timing-function: cubic-bezier(0.22,0.61,0.36,1); animation-fill-mode: forwards; will-change: transform; }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { playAddToCart, playWish } from "@/lib/sound";
 
 export type FlyDetail = {
@@ -76,18 +76,22 @@ export default function FlyLayer() {
   return (
     <>
       <div
+        key={flying.id}
         className="pawberry-fly"
-        style={{
-          position: "fixed",
-          left: sx,
-          top: sy,
-          width: FLY_W,
-          height: FLY_H,
-          transform: `translate(${tx - sx}px, ${ty - sy}px)`,
-          transition: "transform 0.55s cubic-bezier(0.22,0.61,0.36,1)",
-          pointerEvents: "none",
-          zIndex: 9997,
-        }}
+        style={
+          {
+            position: "fixed",
+            left: sx,
+            top: sy,
+            width: FLY_W,
+            height: FLY_H,
+            pointerEvents: "none",
+            zIndex: 9997,
+            animation: "pawberry-fly-anim 0.55s cubic-bezier(0.22,0.61,0.36,1) forwards",
+            "--paw-fly-dx": `${tx - sx}px`,
+            "--paw-fly-dy": `${ty - sy}px`,
+          } as CSSProperties
+        }
       >
         <div
           className="pawberry-fly-thumb"
