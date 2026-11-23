@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest) {
     const cookie = req.cookies.get("pb_admin")?.value;
     const isAdmin = cookie === (process.env.ADMIN_PASSWORD || "pawberry-admin");
     const userEmail = req.cookies.get("pb_user")?.value;
-    const isOwner = userEmail && userEmail === order.customer.email;
+    const isOwner = !!userEmail && userEmail.trim().toLowerCase() === String(order.customer.email || "").trim().toLowerCase();
     if (!isAdmin && !isOwner) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     // only allow cancel by owner; status changes by admin
     if (status === "cancelled") {

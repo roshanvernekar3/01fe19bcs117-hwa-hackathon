@@ -59,7 +59,12 @@ export default function OrdersPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: orderId, status: "cancelled" }),
       });
-      if (res.ok) setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: "cancelled" } : o)));
+      if (res.ok) {
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: "cancelled" } : o)));
+      } else {
+        const d = await res.json().catch(() => ({}));
+        alert(d.error || "Could not cancel this order.");
+      }
     } finally {
       setCancelling(null);
     }
