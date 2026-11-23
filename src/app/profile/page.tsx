@@ -18,6 +18,9 @@ export default function ProfilePage() {
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string>("");
   const [savingAvatar, setSavingAvatar] = useState(false);
+  const [addresses, setAddresses] = useState<
+    { id: string; label: string; name: string; phone: string; address: string; city: string; zip: string; country: string; isDefault: boolean }[]
+  >([]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -32,11 +35,33 @@ export default function ProfilePage() {
             const d = await res.json();
             setOrders(d.orders || []);
           }
+          const ar = await fetch("/api/addresses", { cache: "no-store" });
+          if (ar.ok) {
+            const ad = await ar.json();
+            setAddresses(ad.addresses || []);
+          }
         }
       } catch {}
       setLoading(false);
     })();
   }, []);
+
+  async function removeAddress(id: string) {
+    if (!confirm("Remove this address?")) return;
+    const res = await fetch(`/api/addresses?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    const d = await res.json();
+    if (res.ok) setAddresses(d.addresses || []);
+  }
+
+  async function makeDefaultAddress(id: string) {
+    const res = await fetch("/api/addresses", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const d = await res.json();
+    if (res.ok) setAddresses(d.addresses || []);
+  }
 
   async function cancelOrder(id: string) {
     if (!confirm("Cancel this order?")) return;
@@ -191,6 +216,41 @@ export default function ProfilePage() {
           <div className="mt-6">
             <Link href="/orders" className="text-berry font-semibold hover:underline">View all orders →</Link>
           </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 border border-slate-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-navy">Saved Addresses</h2>
+            <Link href="/checkout" className="text-xs font-semibold text-berry hover:underline">Add at checkout →</Link>
+          </div>
+          {addresses.length === 0 ? (
+            <p className="text-sm text-slate-500">
+              No saved addresses yet. Your address is saved automatically when you tick “Save this address for next time” at checkout.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {addresses.map((a) => (
+                <div key={a.id} className="rounded-xl border border-slate-100 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-navy flex items-center gap-2">
+                      {a.label}
+                      {a.isDefault && <span className="text-[10px] px-2 py-0.5 rounded-full bg-berry/10 text-berry font-semibold">Default</span>}
+                    </span>
+                    <div className="flex items-center gap-3 text-xs">
+                      {!a.isDefault && (
+                        <button onClick={() => makeDefaultAddress(a.id)} className="text-berry hover:underline">Make default</button>
+                      )}
+                      <button onClick={() => removeAddress(a.id)} className="text-red-600 hover:underline">Remove</button>
+                    </div>
+                  </div>
+                  <div className="text-sm text-slate-600 mt-1">
+                    {a.name} · {a.phone}<br />
+                    {a.address}, {a.city} {a.zip}, {a.country}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         </div>
       )}

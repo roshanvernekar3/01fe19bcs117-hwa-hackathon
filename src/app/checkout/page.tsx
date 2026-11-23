@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type GatewayConfig = { enabled: boolean; keyId: string | null };
+type SavedAddress = {
+  id: string; label: string; name: string; phone: string;
+  address: string; city: string; zip: string; country: string; isDefault: boolean;
+};
 
 export default function CheckoutPage() {
   const { items, total, clear } = useCart();
@@ -15,6 +19,10 @@ export default function CheckoutPage() {
   const [gateway, setGateway] = useState<GatewayConfig>({ enabled: false, keyId: null });
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "online">("cod");
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [form, setForm] = useState({
     name: "", email: "", phone: "", address: "", city: "", zip: "", country: "India", notes: "",
   });
@@ -32,6 +40,7 @@ export default function CheckoutPage() {
       .then((r) => r.json())
       .then((d) => {
         if (d?.user) {
+          setIsLoggedIn(true);
           setForm((f) => ({
             ...f,
             name: d.user.name || f.name,
@@ -40,7 +49,42 @@ export default function CheckoutPage() {
         }
       })
       .catch(() => {});
+    // load saved addresses
+    fetch("/api/addresses", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        const list: SavedAddress[] = d?.addresses || [];
+        setAddresses(list);
+        setSaveAddress(list.length === 0);
+        const def = list.find((a) => a.isDefault) || list[0];
+        if (def) {
+          setSelectedAddressId(def.id);
+          setForm((f) => ({
+            ...f,
+            name: def.name || f.name,
+            phone: def.phone || f.phone,
+            address: def.address,
+            city: def.city,
+            zip: def.zip,
+            country: def.country || f.country,
+          }));
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  function selectAddress(a: SavedAddress) {
+    setSelectedAddressId(a.id);
+    setForm((f) => ({
+      ...f,
+      name: a.name,
+      phone: a.phone,
+      address: a.address,
+      city: a.city,
+      zip: a.zip,
+      country: a.country || f.country,
+    }));
+  }
 
   if (items.length === 0) {
     return (
@@ -80,6 +124,15 @@ export default function CheckoutPage() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Order failed");
+    if (isLoggedIn && saveAddress) {
+      try {
+        await fetch("/api/addresses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...customer, label: "Home" }),
+        });
+      } catch {}
+    }
     clear();
     router.push(`/order-confirmation?id=${data.order.id}`);
   }
@@ -157,6 +210,29 @@ export default function CheckoutPage() {
       <form onSubmit={handleSubmit} className="md:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 space-y-4">
         <h1 className="text-2xl font-extrabold text-navy mb-2">Checkout</h1>
 
+        {isLoggedIn && addresses.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Saved addresses</label>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {addresses.map((a) => (
+                <button
+                  type="button"
+                  key={a.id}
+                  onClick={() => selectAddress(a)}
+                  className={`text-left p-3 rounded-xl border-2 transition ${selectedAddressId === a.id ? "border-berry bg-berry/5" : "border-slate-200 hover:border-berry/40"}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-navy">{a.label}</span>
+                    {a.isDefault && <span className="text-[10px] px-2 py-0.5 rounded-full bg-berry/10 text-berry font-semibold">Default</span>}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1 truncate">{a.address}, {a.city} {a.zip}</div>
+                </button>
+              ))}
+            </div>
+            <div className="text-xs text-slate-400 mt-1">Tap an address to auto-fill the form below.</div>
+          </div>
+        )}
+
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Full Name" value={form.name} onChange={(v) => update("name", v)} required />
           <Field label="Email" type="email" value={form.email} onChange={(v) => update("email", v)} required />
@@ -177,6 +253,17 @@ export default function CheckoutPage() {
             className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-berry"
           />
         </div>
+
+        {isLoggedIn ? (
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />
+            Save this address for next time
+          </label>
+        ) : (
+          <p className="text-xs text-slate-400">
+            <Link href="/login" className="text-berry font-semibold hover:underline">Log in</Link> to save your address for faster checkout.
+          </p>
+        )}
 
         {/* Payment method */}
         <div className="pt-2">
