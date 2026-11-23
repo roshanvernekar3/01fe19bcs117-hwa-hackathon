@@ -34,6 +34,7 @@ export default function Header() {
           <Link href="/products?category=pet-houses" className="hover:text-berry transition">Houses</Link>
           <Link href="/products?category=cat-washrooms" className="hover:text-berry transition">Washrooms</Link>
           <Link href="/#about" className="hover:text-berry transition">About</Link>
+          <Link href="/support" className="hover:text-berry transition">Support</Link>
         </nav>
 
         <div className="flex items-center gap-4">
