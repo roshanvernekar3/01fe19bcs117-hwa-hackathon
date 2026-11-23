@@ -74,18 +74,12 @@ export default async function Home() {
                 {/* soft platform */}
                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-72 h-20 bg-sage/50 rounded-[50%] blur-md" />
                 {/* dog */}
-                <div className="absolute bottom-16 left-6 text-[150px] md:text-[190px] animate-pet-bob drop-shadow-2xl select-none preserve-3d" style={{ transformStyle: "preserve-3d" }}>
-                  <span className="inline-block animate-pet-sway">🐶</span>
-                  <span className="absolute left-[26%] top-[38%] w-[10%] h-[6%] bg-[#2f3e46] rounded-full origin-center animate-eye-blink" />
-                  <span className="absolute left-[62%] top-[38%] w-[10%] h-[6%] bg-[#2f3e46] rounded-full origin-center animate-eye-blink" style={{ animationDelay: "0.1s" }} />
-                  <span className="absolute -right-2 bottom-4 text-3xl animate-tail-wag">🐾</span>
+                <div className="absolute bottom-16 left-6 text-[150px] md:text-[190px] drop-shadow-2xl select-none">
+                  🐶
                 </div>
                 {/* cat */}
-                <div className="absolute bottom-20 right-6 text-[140px] md:text-[170px] animate-float drop-shadow-2xl select-none" style={{ transformStyle: "preserve-3d" }}>
-                  <span className="inline-block animate-pet-sway" style={{ animationDelay: "0.8s" }}>🐱</span>
-                  <span className="absolute left-[28%] top-[40%] w-[9%] h-[5%] bg-[#2f3e46] rounded-full origin-center animate-eye-blink" style={{ animationDelay: "0.6s" }} />
-                  <span className="absolute left-[64%] top-[40%] w-[9%] h-[5%] bg-[#2f3e46] rounded-full origin-center animate-eye-blink" style={{ animationDelay: "0.7s" }} />
-                  <span className="absolute -right-4 bottom-6 text-3xl animate-tail-wag" style={{ animationDelay: "0.3s" }}>🐾</span>
+                <div className="absolute bottom-20 right-6 text-[140px] md:text-[170px] drop-shadow-2xl select-none">
+                  🐱
                 </div>
                 {/* floating 3D bubbles */}
                 <div className="absolute top-8 left-1/3 w-20 h-20 rounded-full bg-white/60 backdrop-blur shadow-xl flex items-center justify-center text-3xl animate-float preserve-3d tilt-3d">🏠</div>
