@@ -49,10 +49,7 @@ export default function ProfileMenu() {
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => {
-          if (user?.avatar && (user.avatar.startsWith("http") || user.avatar.startsWith("data:"))) setViewerSrc(user.avatar);
-          else setOpen((o) => !o);
-        }}
+        onClick={() => setOpen((o) => !o)}
         aria-label="profile"
         className="inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition"
       >
@@ -68,10 +65,6 @@ export default function ProfileMenu() {
         <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">
           {user ? (
             <>
-              <div className="px-4 py-2 border-b border-slate-100">
-                <div className="font-semibold text-navy text-sm">{user.name}</div>
-                <div className="text-xs text-slate-500 truncate">{user.email}</div>
-              </div>
               <Link href="/profile" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-slate-50">My Profile</Link>
               <Link href="/orders" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-slate-50">My Orders</Link>
               <Link href="/wishlist" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-slate-50">Wishlist</Link>
