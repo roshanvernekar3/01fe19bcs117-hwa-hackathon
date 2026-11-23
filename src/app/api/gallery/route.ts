@@ -3,10 +3,15 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { put, list } from "@vercel/blob";
 
+const IMAGE_EXT = /\.(png|jpe?g|webp|gif|avif)$/i;
+
 export async function GET() {
   try {
-    const { blobs } = await list({ prefix: "gallery/", limit: 30 });
-    const items = blobs.map((b) => ({ url: b.url, name: b.pathname }));
+    const { blobs } = await list({ prefix: "gallery/", limit: 60 });
+    const items = blobs
+      .filter((b) => IMAGE_EXT.test(b.pathname) && b.size > 1024)
+      .sort((a, b) => b.pathname.localeCompare(a.pathname))
+      .map((b) => ({ url: b.url, name: b.pathname }));
     return NextResponse.json({ items });
   } catch {
     return NextResponse.json({ items: [] });
@@ -20,13 +25,23 @@ export async function POST(req: NextRequest) {
     if (!image || typeof image !== "string") {
       return NextResponse.json({ error: "Missing image" }, { status: 400 });
     }
-    // image is data URL: data:image/...;base64,...
     const match = image.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
     if (!match) return NextResponse.json({ error: "Invalid image" }, { status: 400 });
     const contentType = match[1];
     const buffer = Buffer.from(match[2], "base64");
-    const filename = `gallery/${Date.now()}-${(name || "paw").toString().replace(/[^a-z0-9]/gi, "")}.jpg`;
-    const blob = await put(filename, buffer, { access: "public", contentType });
+    if (buffer.length < 1024) {
+      return NextResponse.json({ error: "That image looks broken. Try another photo." }, { status: 400 });
+    }
+    const ext = contentType.includes("png")
+      ? "png"
+      : contentType.includes("webp")
+        ? "webp"
+        : contentType.includes("gif")
+          ? "gif"
+          : "jpg";
+    const safe = (name || "paw").toString().replace(/[^a-z0-9]/gi, "").slice(0, 40) || "paw";
+    const filename = `gallery/${Date.now()}-${safe}.${ext}`;
+    const blob = await put(filename, buffer, { access: "public", contentType, addRandomSuffix: false });
     return NextResponse.json({ url: blob.url }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

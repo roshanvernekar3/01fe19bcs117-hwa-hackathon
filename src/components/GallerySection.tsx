@@ -28,6 +28,10 @@ export default function GallerySection() {
     load();
   }, []);
 
+  function dropBroken(url: string) {
+    setItems((prev) => prev.filter((it) => it.url !== url));
+  }
+
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -68,11 +72,20 @@ export default function GallerySection() {
             <div className="text-muted mt-3">No photos yet — be the first to share your happy paw! 🐾</div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 items-stretch">
             {items.map((it) => (
-              <div key={it.url} className="relative aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition hover-lift">
+              <div
+                key={it.url}
+                className="relative aspect-square rounded-2xl overflow-hidden bg-slate-100 shadow-sm hover:shadow-xl transition hover-lift"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={it.url} alt="happy paw" className="w-full h-full object-cover" />
+                <img
+                  src={it.url}
+                  alt="Happy paw"
+                  loading="lazy"
+                  onError={() => dropBroken(it.url)}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
               </div>
             ))}
           </div>
@@ -93,7 +106,6 @@ export default function GallerySection() {
     </section>
   );
 }
-
 
 function compressImage(file: File, maxSize: number, quality: number): Promise<string> {
   return new Promise((resolve, reject) => {
