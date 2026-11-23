@@ -51,7 +51,13 @@ export default function ProfileMenu() {
         aria-label="profile"
         className="inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition"
       >
-        <span className="text-xl">{user ? (user.avatar || "👤") : "👤"}</span>
+        <span className="w-7 h-7 inline-flex items-center justify-center text-xl overflow-hidden rounded-full">
+          {user?.avatar && (user.avatar.startsWith("http") || user.avatar.startsWith("data:")) ? (
+            <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+          ) : (
+            user ? (user.avatar || "👤") : "👤"
+          )}
+        </span>
       </button>
       {open && (
         <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">

@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string>("");
   const [savingAvatar, setSavingAvatar] = useState(false);
+  const [avatarMsg, setAvatarMsg] = useState<string | null>(null);
   const [addresses, setAddresses] = useState<
     { id: string; label: string; name: string; phone: string; address: string; city: string; zip: string; country: string; isDefault: boolean }[]
   >([]);
@@ -136,7 +137,11 @@ export default function ProfilePage() {
             <h2 className="text-xl font-bold text-navy mb-4">Profile Picture</h2>
             <div className="flex items-center gap-4 mb-4">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl overflow-hidden">
-                {avatar && (avatar.startsWith("http") ? <img src={avatar} alt="" className="w-full h-full object-cover" /> : avatar)}
+                {avatar && (avatar.startsWith("http") || avatar.startsWith("data:")) ? (
+                  <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  avatar || "🐾"
+                )}
               </div>
               <div className="flex-1">
                 <div className="text-sm text-slate-500 mb-2">Choose a pet avatar</div>
@@ -155,35 +160,44 @@ export default function ProfilePage() {
             </div>
             <div className="flex items-center gap-3">
               <label className="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold cursor-pointer hover:bg-slate-50">
-                Upload photo
+                {savingAvatar ? "Uploading..." : "Upload photo"}
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
+                  disabled={savingAvatar}
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
+                    e.target.value = "";
                     if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = async () => {
-                      setSavingAvatar(true);
-                      try {
-                        const res = await fetch("/api/auth/profile", {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ image: reader.result }),
-                        });
-                        const d = await res.json();
-                        if (res.ok) setAvatar(d.user.avatar);
-                      } finally {
-                        setSavingAvatar(false);
-                      }
-                    };
-                    reader.readAsDataURL(file);
+                    if (!file.type.startsWith("image/")) {
+                      setAvatarMsg("Please choose an image file.");
+                      return;
+                    }
+                    setAvatarMsg(null);
+                    setSavingAvatar(true);
+                    try {
+                      const dataUrl = await compressImage(file, 512, 0.85);
+                      const res = await fetch("/api/auth/profile", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ image: dataUrl }),
+                      });
+                      const d = await res.json().catch(() => ({}));
+                      if (!res.ok) throw new Error(d.error || "Upload failed");
+                      setAvatar(d.user.avatar);
+                      setAvatarMsg("Photo saved!");
+                    } catch (err) {
+                      setAvatarMsg(err instanceof Error ? err.message : "Upload failed");
+                    } finally {
+                      setSavingAvatar(false);
+                    }
                   }}
                 />
               </label>
               <button
                 onClick={async () => {
+                  setAvatarMsg(null);
                   setSavingAvatar(true);
                   try {
                     const res = await fetch("/api/auth/profile", {
@@ -191,8 +205,12 @@ export default function ProfilePage() {
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ avatar }),
                     });
-                    const d = await res.json();
-                    if (res.ok) setAvatar(d.user.avatar);
+                    const d = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(d.error || "Could not save avatar");
+                    setAvatar(d.user.avatar);
+                    setAvatarMsg("Avatar saved!");
+                  } catch (err) {
+                    setAvatarMsg(err instanceof Error ? err.message : "Could not save avatar");
                   } finally {
                     setSavingAvatar(false);
                   }
@@ -203,6 +221,9 @@ export default function ProfilePage() {
                 {savingAvatar ? "Saving..." : "Save Avatar"}
               </button>
             </div>
+            {avatarMsg && (
+              <p className={`mt-3 text-sm ${avatarMsg.includes("saved") ? "text-green-600" : "text-red-500"}`}>{avatarMsg}</p>
+            )}
           </div>
 
           <div className="bg-white rounded-2xl p-6 border border-slate-100">
@@ -313,4 +334,28 @@ export default function ProfilePage() {
       )}
     </div>
   );
+}
+function compressImage(file: File, maxSize: number, quality: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Could not process image"));
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read image"));
+    };
+    img.src = url;
+  });
 }
