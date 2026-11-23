@@ -52,7 +52,7 @@ export default function WishlistPage() {
           <div key={p.slug} className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl transition hover-lift">
             <Link href={`/products/${p.slug}`}>
               <div className="relative h-48 bg-gradient-to-br from-cream to-blush overflow-hidden">
-                <Image src={p.image} alt={p.name} fill className="object-cover" sizes="25vw" />
+                <Image src={p.image} alt={p.name} fill className="object-contain p-2" sizes="25vw" />
               </div>
             </Link>
             <div className="p-4">

@@ -251,7 +251,7 @@ export default function PawPlayMatch() {
                 >
                   <div className="flex gap-3">
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
-                      <Image src={p.image} alt={p.name} fill className="object-cover" sizes="80px" />
+                      <Image src={p.image} alt={p.name} fill className="object-contain p-1" sizes="80px" />
                     </div>
                     <div className="flex-1">
                       <div className="font-bold text-navy">{p.name}</div>

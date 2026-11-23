@@ -42,7 +42,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
 
       <div className="grid md:grid-cols-2 gap-10">
         <div className="relative rounded-3xl overflow-hidden h-80 md:h-[480px] shadow-lg bg-gradient-to-br from-cream to-blush">
-          <Image src={product.image} alt={product.name} fill className="object-cover" sizes="(max-width:768px) 100vw, 50vw" priority />
+          <Image src={product.image} alt={product.name} fill className="object-contain p-4" sizes="(max-width:768px) 100vw, 50vw" priority />
         </div>
 
         <div>
