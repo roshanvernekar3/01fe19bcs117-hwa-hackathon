@@ -15,10 +15,12 @@ export default function AddToCart({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(1);
 
+  // If stock is explicitly set (number), use it; otherwise treat as unlimited (999) when inStock
+  const effectiveStock = product.inStock && (product.stock === null || product.stock === undefined) ? 999 : (product.stock ?? 0);
+
   function handleAdd() {
     const existing = items.find((i) => i.slug === product.slug)?.qty ?? 0;
-    const stock = product.stock ?? 0;
-    const avail = Math.max(0, stock - existing);
+    const avail = Math.max(0, effectiveStock - existing);
     const toAdd = Math.min(qty, avail);
     for (let i = 0; i < toAdd; i++) add({ slug: product.slug, name: product.name, price: product.price, emoji: product.emoji });
     setAdded(true);
@@ -53,7 +55,7 @@ export default function AddToCart({ product }: { product: Product }) {
       <div className="flex items-center border border-slate-200 rounded-full overflow-hidden">
         <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="px-4 py-2 hover:bg-slate-100">−</button>
         <span className="px-4 py-2 font-semibold">{qty}</span>
-        <button onClick={() => setQty((q) => Math.min(product.stock ?? 999, Math.max(1, q + 1)))} className="px-4 py-2 hover:bg-slate-100">+</button>
+        <button onClick={() => setQty((q) => Math.min(effectiveStock, Math.max(1, q + 1)))} className="px-4 py-2 hover:bg-slate-100">+</button>
       </div>
       <button
         ref={wishBtnRef}
