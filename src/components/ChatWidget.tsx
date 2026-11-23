@@ -34,7 +34,6 @@ export default function ChatWidget() {
 
   useEffect(() => {
     if (!open) return;
-    setMessages([{ id: "g1", from: "bot", text: "Hi! I'm PawBot 🐾 ... How can I help you today?" }]);
     setInput("");
     (async () => {
       try {
