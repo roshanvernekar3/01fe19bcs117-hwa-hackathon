@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { getCatalog } from "@/lib/products-store";
 import AddToCart from "@/components/AddToCart";
+import ProductImage from "@/components/ProductImage";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
 
@@ -41,9 +41,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
       </nav>
 
       <div className="grid md:grid-cols-2 gap-10">
-        <div className="relative rounded-3xl overflow-hidden h-80 md:h-[480px] shadow-lg bg-gradient-to-br from-cream to-blush">
-          <Image src={product.image} alt={product.name} fill className="object-contain p-4" sizes="(max-width:768px) 100vw, 50vw" priority />
-        </div>
+        <ProductImage src={product.image} alt={product.name} />
 
         <div>
           {product.badge && <span className="inline-block text-xs font-semibold text-berry bg-berry/10 px-3 py-1 rounded-full mb-3">{product.badge}</span>}
