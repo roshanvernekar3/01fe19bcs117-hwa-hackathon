@@ -204,6 +204,7 @@ export default function ProfilePage() {
                   }}
                 />
               </label>
+              {(!avatar || (!avatar.startsWith("http") && !avatar.startsWith("data:"))) && (
               <button
                 onClick={async () => {
                   setAvatarMsg(null);
@@ -229,6 +230,7 @@ export default function ProfilePage() {
               >
                 {savingAvatar ? "Saving..." : "Save Avatar"}
               </button>
+              )}
               {avatar && (avatar.startsWith("http") || avatar.startsWith("data:")) && (
               <button
                 onClick={async () => {
