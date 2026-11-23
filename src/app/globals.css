@@ -74,6 +74,12 @@
 .animate-peek { animation: peek 2.4s ease-in-out infinite; }
 .animate-bounce-soft { animation: bounce-soft 1.6s ease-in-out infinite; }
 
+@keyframes eye-blink {
+  0%, 86%, 100% { transform: scaleY(0); opacity: 0; }
+  90%, 96% { transform: scaleY(1); opacity: 1; }
+}
+.animate-eye-blink { animation: eye-blink 4s ease-in-out infinite; }
+
 @keyframes tail-wag {
   0%, 100% { transform: rotate(-12deg); }
   50% { transform: rotate(12deg); }
