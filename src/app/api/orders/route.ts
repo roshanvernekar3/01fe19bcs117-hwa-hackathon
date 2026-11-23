@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
       total: Number(total.toFixed(2)),
       notes: body?.notes,
       paymentMethod: body?.paymentMethod === "razorpay" ? "razorpay" : body?.paymentMethod === "demo" ? "demo" : "cod",
-      paymentStatus: body?.paymentStatus === "paid" ? "paid" : body?.paymentStatus === "test" ? "test" : "pending",
+      paymentStatus: body?.paymentStatus === "paid" ? "paid" : body?.paymentStatus === "test" ? "test" : body?.paymentStatus === "failed" ? "failed" : "pending",
       paymentId: body?.paymentId,
       stockDeducted: true,
     });

@@ -85,7 +85,7 @@ export default function CheckoutPage() {
     return true;
   }
 
-  async function placeOrder(extra: { paymentMethod: "cod" | "razorpay" | "demo"; paymentStatus: "pending" | "paid" | "test"; paymentId?: string }) {
+  async function placeOrder(extra: { paymentMethod: "cod" | "razorpay" | "demo"; paymentStatus: "pending" | "paid" | "test" | "failed"; paymentId?: string }) {
     let customer = { ...form };
     try {
       const r = await fetch("/api/auth/me", { cache: "no-store" });
@@ -267,7 +267,7 @@ export default function CheckoutPage() {
               <p className="text-slate-500 text-sm mb-4">Test mode — no real money. Amount: <span className="font-bold text-berry">₹{grand}</span></p>
               <div className="flex gap-3">
                 <button onClick={async () => { setShowDemoModal(false); setSubmitting(true); try { await placeOrder({ paymentMethod: "demo", paymentStatus: "test" }); } catch (err) { setError(err instanceof Error ? err.message : "Order failed"); } finally { setSubmitting(false); } }} className="flex-1 px-4 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition">Pay (Success)</button>
-                <button onClick={() => { setShowDemoModal(false); setError("Payment failed. Your order was not placed."); }} className="flex-1 px-4 py-3 rounded-full border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition">Fail</button>
+                <button onClick={async () => { setShowDemoModal(false); setSubmitting(true); try { await placeOrder({ paymentMethod: "demo", paymentStatus: "failed" }); } catch (err) { setError(err instanceof Error ? err.message : "Payment failed. Your order was not placed."); } finally { setSubmitting(false); } }} className="flex-1 px-4 py-3 rounded-full border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition">Fail</button>
               </div>
               <button onClick={() => setShowDemoModal(false)} className="mt-3 text-xs text-slate-400 hover:text-slate-600">Cancel</button>
             </div>
