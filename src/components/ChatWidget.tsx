@@ -4,12 +4,19 @@ import { useEffect, useRef, useState } from "react";
 
 type ChatMsg = { id: string; from: "user" | "bot"; text: string; complaintId?: string; status?: string };
 type Complaint = { id: string; status: string; topic: string; message: string };
+type FlowKind = "cancel" | "return" | "refund" | "support";
+type Pending = { kind: FlowKind; orderId?: string; issue?: string; order?: { id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] } } | null;
 
 const QUICK_REPLIES = [
   { label: "Where is my order?", topic: "order", message: "Where is my order?" },
   { label: "Cancel my order", topic: "cancel", message: "I would like to cancel my order." },
   { label: "Request a return", topic: "return", message: "I would like to request a return." },
   { label: "Talk to support", topic: "other", message: "I need help from a support agent." },
+];
+
+const CONFIRM_QUICKS = [
+  { label: "No", value: "no" },
+  { label: "Cancel", value: "yes" },
 ];
 
 let chatSeq = 1;
@@ -20,6 +27,8 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
+  const [flow, setFlow] = useState<{ kind: FlowKind; orderId?: string } | null>(null);
+  const [pending, setPending] = useState<Pending>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const lastNotifiedRef = useRef<string>("");
 
@@ -65,11 +74,38 @@ export default function ChatWidget() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
 
+  function addBot(text: string, complaintId?: string, status?: string) {
+    setMessages((m) => [...m, { id: "b" + chatSeq++, from: "bot" as const, text, complaintId, status }]);
+  }
+
+  function addUser(text: string) {
+    setMessages((m) => [...m, { id: "u" + chatSeq++, from: "user" as const, text }]);
+  }
+
+  async function lookupOrder(): Promise<{ id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] } | null> {
+    try {
+      const r = await fetch("/api/orders/mine", { cache: "no-store" });
+      const d = await r.json();
+      const rawOrders: { id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] }[] = (d?.orders || []) as { id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] }[];
+      const orders = rawOrders.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      if (!orders.length) {
+        addBot("I could not find any orders on your account yet. If you just placed one, give me a minute!");
+        return null;
+      }
+      const o = orders[0];
+      addBot(`Latest order: ${o.id} · ${o.status} · ₹${o.total} · Placed ${new Date(o.createdAt).toLocaleString()}. Items: ${o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}.`);
+      return o;
+    } catch {
+      addBot("Sorry, I could not look up your orders right now.");
+      return null;
+    }
+  }
+
   async function send(text: string, topic?: string) {
     const t = text.trim();
-    if (!t || sending) return;
+    if (!t) return;
     setSending(true);
-    setMessages((m) => [...m, { id: "u" + chatSeq++, from: "user" as const, text: t }]);
+    addUser(t);
     setInput("");
     try {
       const r = await fetch("/api/support/complaints", {
@@ -81,42 +117,94 @@ export default function ChatWidget() {
       if (r.ok) {
         const c = d?.complaint;
         setActiveComplaint(c);
-        setMessages((m) => [
-          ...m,
-          { id: "b" + chatSeq++, from: "bot" as const, text: `Complaint ${c.id} filed. Status: ${c.status}. Our team will review it shortly.`, complaintId: c.id, status: c.status },
-        ]);
+        setFlow(null);
+        setPending(null);
+        addBot(`Complaint ${c.id} filed. Status: ${c.status}. Our team will review it shortly.`, c.id, c.status);
       } else {
-        setMessages((m) => [...m, { id: "b" + chatSeq++, from: "bot" as const, text: d?.error || "Sorry, something went wrong. Please try again." }]);
+        addBot(d?.error || "Sorry, something went wrong. Please try again.");
       }
     } catch {
-      setMessages((m) => [...m, { id: "b" + chatSeq++, from: "bot" as const, text: "Sorry, I could not send that. Please try again." }]);
+      addBot("Sorry, I could not send that. Please try again.");
     }
     setSending(false);
   }
 
-  async function lookupOrder() {
-    try {
-      const r = await fetch("/api/orders/mine", { cache: "no-store" });
-      const d = await r.json();
-      const rawOrders: { id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] }[] = (d?.orders || []) as { id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] }[];
-      const orders = rawOrders.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      if (!orders.length) {
-        setMessages((m) => [...m, { id: "b" + chatSeq++, from: "bot" as const, text: "I could not find any orders on your account yet. If you just placed one, give me a minute!" }]);
+  function startFlow(kind: FlowKind, orderId?: string) {
+    setFlow({ kind, orderId: orderId || undefined });
+    setPending(null);
+    if (kind === "cancel") addBot("Sure — I can help you cancel your order. Please share your order ID (e.g., PB-XXXXXX-XXXX) so I can prepare the cancellation.");
+    else if (kind === "return") addBot("Sure — I can help you request a return. Please share the order ID you'd like to return.");
+    else if (kind === "refund") addBot("Sure — I can help you request a refund. Please share the order ID.");
+    else addBot("Sure — how can we help? Tell us briefly what happened, and we'll raise a support ticket for you.");
+  }
+
+  async function handleUserSend(text: string) {
+    const t = text.trim();
+    if (!t) return;
+    addUser(t);
+    if (flow) {
+      if (flow.kind === "cancel" || flow.kind === "return" || flow.kind === "refund") {
+        const orderId = t.trim();
+        const o = await lookupOrder();
+        const finalId = o?.id || orderId;
+        setFlow({ kind: flow.kind, orderId: finalId });
+        setPending({ kind: flow.kind, orderId: finalId, order: o || undefined });
+        addBot(`Please review your ${flow.kind} request for order ${finalId}. If everything looks right, confirm to submit the ticket.`);
         return;
       }
-      const o = orders[0];
-      setMessages((m) => [
-        ...m,
-        { id: "b" + chatSeq++, from: "bot" as const, text: `Latest order: ${o.id} · ${o.status} · ₹${o.total} · Placed ${new Date(o.createdAt).toLocaleString()}. Items: ${o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}.` },
-      ]);
-    } catch {
-      setMessages((m) => [...m, { id: "b" + chatSeq++, from: "bot" as const, text: "Sorry, I could not look up your orders right now." }]);
+      if (flow.kind === "support") {
+        const issue = t.trim();
+        setPending({ kind: "support", issue });
+        addBot(`Thanks — I've noted your request. Summary: ${issue}. Confirm below to raise a support ticket.`);
+        return;
+      }
+    }
+    await send(t, "other");
+  }
+
+  function confirmPending(action: "yes" | "no") {
+    if (!pending) return;
+    if (action === "no") {
+      setFlow(null);
+      setPending(null);
+      addBot("No problem — nothing was submitted. Your request was not raised.");
+      return;
+    }
+    if (pending.kind === "cancel") void createComplaint("cancel", `Cancel order ${pending.orderId}`, pending.orderId);
+    else if (pending.kind === "return") void createComplaint("return", `Return request for order ${pending.orderId}`, pending.orderId);
+    else if (pending.kind === "refund") void createComplaint("refund", `Refund request for order ${pending.orderId}`, pending.orderId);
+    else if (pending.kind === "support") void createComplaint("other", pending.issue || "Support request");
+  }
+
+  async function createComplaint(topic: string, message: string, orderId?: string) {
+    const r = await fetch("/api/support/complaints", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ topic, message, orderId }) });
+    const d = await r.json();
+    if (r.ok) {
+      const c = d?.complaint;
+      setActiveComplaint(c);
+      setFlow(null);
+      setPending(null);
+      addBot(`Complaint ${c.id} filed. Status: ${c.status}. Our team will review it shortly.`, c.id, c.status);
+    } else {
+      addBot(d?.error || "Sorry, something went wrong. Please try again.");
     }
   }
 
   async function handleQuick(q: { label: string; topic: string; message: string }) {
     if (q.label === "Where is my order?") {
       await lookupOrder();
+      return;
+    }
+    if (q.label === "Cancel my order") {
+      startFlow("cancel");
+      return;
+    }
+    if (q.label === "Request a return") {
+      startFlow("return");
+      return;
+    }
+    if (q.label === "Talk to support") {
+      startFlow("support");
       return;
     }
     await send(q.message, q.topic);
@@ -146,24 +234,34 @@ export default function ChatWidget() {
             ))}
             <div ref={endRef} />
           </div>
-          <div className="p-2 border-t border-slate-100 flex flex-wrap gap-2">
-            {QUICK_REPLIES.map((q) => (
-              <button key={q.label} onClick={() => handleQuick(q)} className="px-3 py-1.5 rounded-full bg-berry/10 text-berry text-xs font-semibold hover:bg-berry/20 transition">
-                {q.label}
-              </button>
-            ))}
-          </div>
+          {pending ? (
+            <div className="p-2 border-t border-slate-100 flex flex-wrap gap-2">
+              {CONFIRM_QUICKS.map((q) => (
+                <button key={q.value} onClick={() => confirmPending(q.value as "yes" | "no")} className="px-3 py-1.5 rounded-full bg-berry text-white text-xs font-semibold hover:bg-berry-dark transition">
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="p-2 border-t border-slate-100 flex flex-wrap gap-2">
+              {QUICK_REPLIES.map((q) => (
+                <button key={q.label} onClick={() => handleQuick(q)} className="px-3 py-1.5 rounded-full bg-berry/10 text-berry text-xs font-semibold hover:bg-berry/20 transition">
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="p-3 border-t border-slate-100 flex gap-2">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") send(input);
+                if (e.key === "Enter") void handleUserSend(input);
               }}
-              placeholder="Describe your issue..."
+              placeholder={pending ? "Type your confirmation..." : "Describe your issue..."}
               className="flex-1 px-3 py-2 rounded-full border border-slate-200 text-sm focus:outline-none focus:border-berry"
             />
-            <button onClick={() => send(input)} disabled={sending} className="px-4 py-2 rounded-full bg-berry text-white text-sm font-semibold hover:bg-berry-dark transition disabled:opacity-60">
+            <button onClick={() => void handleUserSend(input)} disabled={sending} className="px-4 py-2 rounded-full bg-berry text-white text-sm font-semibold hover:bg-berry-dark transition disabled:opacity-60">
               Send
             </button>
           </div>
