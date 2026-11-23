@@ -111,8 +111,8 @@ export default function FlyLayer() {
   return (
     <>
       <div className="fixed pointer-events-none z-[9997]" style={{ left: flying.from.x, top: flying.from.y, width: flying.from.w, height: flying.from.h, transform: `translate(${toX - flying.from.x}px, ${toY - flying.from.y}px)`, transition: "transform 0.55s cubic-bezier(0.22,0.61,0.36,1)" }}>
-        <div className="pawberry-fly-thumb" style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.95)", borderRadius: "12px", boxShadow: "0 12px 32px rgba(47,62,70,0.18)", backdropFilter: "blur(6px)" }}>
-          {flying.image ? <img src={flying.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span>{flying.emoji}</span>}
+        <div className="pawberry-fly-thumb" style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.95)", borderRadius: "999px", boxShadow: "0 12px 32px rgba(47,62,70,0.18)", backdropFilter: "blur(6px)" }}>
+          <span style={{ fontSize: Math.min(24, flying.from.w * 0.5, flying.from.h * 0.5), lineHeight: 1 }}>{flying.emoji}</span>
         </div>
       </div>
       {toast && (

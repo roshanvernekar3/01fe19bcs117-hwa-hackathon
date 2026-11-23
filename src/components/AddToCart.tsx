@@ -7,7 +7,7 @@ import type { Product } from "@/lib/products";
 import Link from "next/link";
 
 export default function AddToCart({ product }: { product: Product }) {
-  const { add } = useCart();
+  const { add, items } = useCart();
   const { has, toggle } = useWishlist();
   const addBtnRef = useRef<HTMLButtonElement>(null);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
@@ -15,7 +15,11 @@ export default function AddToCart({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
 
   function handleAdd() {
-    for (let i = 0; i < qty; i++) add({ slug: product.slug, name: product.name, price: product.price, emoji: product.emoji });
+    const existing = items.find((i) => i.slug === product.slug)?.qty ?? 0;
+    const stock = product.stock ?? 0;
+    const avail = Math.max(0, stock - existing);
+    const toAdd = Math.min(qty, avail);
+    for (let i = 0; i < toAdd; i++) add({ slug: product.slug, name: product.name, price: product.price, emoji: product.emoji });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
     const el = addBtnRef.current;
@@ -40,7 +44,7 @@ export default function AddToCart({ product }: { product: Product }) {
       <div className="flex items-center border border-slate-200 rounded-full overflow-hidden">
         <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="px-4 py-2 hover:bg-slate-100">−</button>
         <span className="px-4 py-2 font-semibold">{qty}</span>
-        <button onClick={() => setQty((q) => q + 1)} className="px-4 py-2 hover:bg-slate-100">+</button>
+        <button onClick={() => setQty((q) => Math.min(product.stock ?? 999, Math.max(1, q + 1)))} className="px-4 py-2 hover:bg-slate-100">+</button>
       </div>
       <button
         ref={wishBtnRef}
