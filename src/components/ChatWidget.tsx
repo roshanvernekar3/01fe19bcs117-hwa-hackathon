@@ -198,6 +198,7 @@ export default function ChatWidget() {
   }
 
   async function handleQuick(q: { label: string; topic: string; message: string }) {
+    addUser(q.label);
     if (q.label === "Where is my order?") {
       await lookupOrder();
       return;
