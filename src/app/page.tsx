@@ -1,101 +1,31 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/products";
+import { getCatalog } from "@/lib/products-store";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
 import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
 import NewsletterSection from "@/components/NewsletterSection";
-import type { Product } from "@/lib/products";
 
-export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
-  useEffect(() => {
-    fetch("/api/products", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => setProducts(d.products || []))
-      .catch(() => {});
-  }, []);
-
-  const featured = products.slice(0, 4);
-  const bestsellers = products.filter((p) => p.badge).slice(0, 4);
-  const showcase = products.slice(0, 6);
-
-  // refs
-  const heroRef = useRef<HTMLDivElement>(null);
-  const heroBgRef = useRef<HTMLDivElement>(null);
-  const dogRef = useRef<HTMLDivElement>(null);
-  const catRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
-  const showcaseRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const parallaxRefs = useRef<HTMLDivElement[]>([]);
-
-  useEffect(() => {
-    const mobile = window.innerWidth < 768;
-    const factor = mobile ? 0.4 : 1;
-    let raf = 0;
-    function update() {
-      const scrollY = window.scrollY;
-      const vh = window.innerHeight;
-
-      // Hero parallax
-      const hero = heroRef.current;
-      if (hero) {
-        const h = hero.offsetHeight;
-        const p = Math.min(1, Math.max(0, scrollY / h));
-        if (heroBgRef.current) {
-          heroBgRef.current.style.transform = `translate3d(0, ${scrollY * 0.25 * factor}px, 0)`;
-        }
-        if (dogRef.current) {
-          dogRef.current.style.transform = `translate3d(0, ${scrollY * 0.4 * factor}px, 0) scale(${1 + p * 0.06})`;
-        }
-        if (catRef.current) {
-          catRef.current.style.transform = `translate3d(0, ${scrollY * 0.25 * factor}px, 0) scale(${1 + p * 0.04})`;
-        }
-        if (titleRef.current) {
-          titleRef.current.style.transform = `translate3d(0, ${scrollY * 0.15 * factor}px, 0)`;
-          titleRef.current.style.opacity = String(Math.max(0, 1 - p * 1.1));
-        }
-        hero.style.opacity = String(Math.max(0, 1 - p * 0.9));
-        hero.style.transform = `scale(${1 - p * 0.04})`;
-      }
-
-      // Horizontal showcase
-      const sc = showcaseRef.current;
-      const tr = trackRef.current;
-      if (sc && tr) {
-        const top = sc.offsetTop;
-        const height = sc.offsetHeight;
-        const progress = Math.min(1, Math.max(0, (scrollY - top + vh * 0.5) / (height - vh)));
-        const max = tr.scrollWidth - sc.clientWidth;
-        tr.style.transform = `translate3d(${-progress * max}px, 0, 0)`;
-      }
-
-      // Generic parallax layers
-      parallaxRefs.current.forEach((el) => {
-        if (!el) return;
-        const speed = parseFloat(el.dataset.speed || "0.3");
-        const rect = el.getBoundingClientRect();
-        const offset = (rect.top + rect.height / 2 - vh / 2) * speed * factor;
-        el.style.transform = `translate3d(0, ${-offset}px, 0)`;
-      });
-
-      raf = requestAnimationFrame(update);
-    }
-    raf = requestAnimationFrame(update);
-    return () => cancelAnimationFrame(raf);
-  }, []);
+export default async function Home() {
+  const PRODUCTS = await getCatalog();
+  const featured = PRODUCTS.slice(0, 4);
+  const bestsellers = PRODUCTS.filter((p) => p.badge).slice(0, 4);
 
   return (
     <div className="overflow-hidden">
-      {/* Hero (sticky-ish full screen) */}
-      <section ref={heroRef} className="relative min-h-[100vh] flex items-center overflow-hidden" style={{ willChange: "transform, opacity" }}>
-        <div ref={heroBgRef} className="absolute inset-0 bg-gradient-to-br from-cream via-blush to-peach" style={{ willChange: "transform" }} />
+      {/* Hero */}
+      <section className="relative min-h-[90vh] flex items-center perspective-1000">
+        <div className="absolute inset-0 bg-gradient-to-br from-cream via-blush to-peach" />
         <div className="absolute top-20 left-10 w-72 h-72 bg-sage/40 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-10 right-10 w-80 h-80 bg-berry/20 rounded-full blur-3xl animate-float-slow" />
+
+        {/* paw prints drifting */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <span className="absolute top-32 left-[6%] text-4xl animate-paw-drift opacity-20">🐾</span>
+          <span className="absolute top-1/2 right-[5%] text-5xl animate-paw-drift opacity-20" style={{ animationDelay: "2s" }}>🐾</span>
+          <span className="absolute bottom-24 left-[40%] text-3xl animate-paw-drift opacity-20" style={{ animationDelay: "4s" }}>🐾</span>
+        </div>
 
         {/* floating 3D elements */}
         <div className="pointer-events-none absolute inset-0" style={{ perspective: "900px" }}>
@@ -110,7 +40,7 @@ export default function Home() {
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid md:grid-cols-2 gap-12 items-center w-full">
-          <div ref={titleRef} style={{ willChange: "transform, opacity" }}>
+          <Reveal>
             <span className="inline-block px-4 py-1.5 rounded-full bg-white/70 backdrop-blur text-berry text-xs font-semibold mb-6 shadow-sm">
               🐾 New arrivals every week
             </span>
@@ -135,76 +65,29 @@ export default function Home() {
               <div><span className="font-bold text-navy text-lg">4.8★</span><br />avg rating</div>
               <div><span className="font-bold text-navy text-lg">Free</span><br />ship ₹1000+</div>
             </div>
-          </div>
+          </Reveal>
 
           {/* cute dog & cat with 3D floating */}
-          <div className="relative h-[420px] md:h-[520px]" style={{ perspective: "1000px" }}>
-            <div className="absolute inset-0 flex items-center justify-center" style={{ transformStyle: "preserve-3d" }}>
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-72 h-20 bg-sage/50 rounded-[50%] blur-md" />
-              <div ref={dogRef} className="absolute bottom-16 left-6 text-[150px] md:text-[190px] drop-shadow-2xl select-none" style={{ willChange: "transform" }}>
-                🐶
-                <span className="absolute -right-2 bottom-4 text-3xl animate-tail-wag">🐾</span>
-              </div>
-              <div ref={catRef} className="absolute bottom-20 right-6 text-[140px] md:text-[170px] drop-shadow-2xl select-none" style={{ willChange: "transform" }}>
-                🐱
-                <span className="absolute -right-4 bottom-6 text-3xl animate-tail-wag" style={{ animationDelay: "0.3s" }}>🐾</span>
-              </div>
-              <div className="absolute top-8 left-1/3 w-20 h-20 rounded-full bg-white/60 backdrop-blur shadow-xl flex items-center justify-center text-3xl animate-float preserve-3d tilt-3d">🏠</div>
-              <div className="absolute top-20 right-1/4 w-16 h-16 rounded-full bg-peach/80 shadow-xl flex items-center justify-center text-2xl animate-float-slow preserve-3d tilt-3d">🛁</div>
-              <div className="absolute top-1/2 left-8 w-14 h-14 rounded-full bg-blush shadow-lg flex items-center justify-center text-2xl animate-float preserve-3d tilt-3d">🎾</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Horizontal product showcase */}
-      <section ref={showcaseRef} className="relative py-24 overflow-hidden" style={{ minHeight: "160vh" }}>
-        <div className="sticky top-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-            <Reveal>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-navy">Featured Collection</h2>
-              <p className="text-muted mt-2">Scroll to explore our bestsellers.</p>
-            </Reveal>
-          </div>
-          <div className="overflow-hidden">
-            <div ref={trackRef} className="flex gap-6 px-4 sm:px-6 lg:px-8 will-change-transform" style={{ width: "max-content" }}>
-              {showcase.map((p) => (
-                <div key={p.id} className="w-[280px] sm:w-[320px] flex-shrink-0">
-                  <ProductCard p={p} />
-                </div>
-              ))}
-              {showcase.map((p) => (
-                <div key={`dup-${p.id}`} className="w-[280px] sm:w-[320px] flex-shrink-0">
-                  <ProductCard p={p} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Parallax story */}
-      <section className="relative py-24 overflow-hidden">
-        <div ref={(el) => { if (el) parallaxRefs.current[0] = el; }} data-speed="0.4" className="absolute -top-10 left-10 text-[120px] opacity-10 select-none pointer-events-none">🐾</div>
-        <div ref={(el) => { if (el) parallaxRefs.current[1] = el; }} data-speed="0.6" className="absolute top-20 right-16 text-[100px] opacity-10 select-none pointer-events-none">🐱</div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
-          <Reveal>
-            <div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-navy">Designed for Joy</h2>
-              <p className="text-muted mt-4 leading-relaxed">
-                Every PAWBERRY product is crafted to spark curiosity, comfort and connection between you and your pet. Thoughtful details, honest prices, real results.
-              </p>
-              <Link href="/products" className="inline-block mt-6 px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition shadow-lg shadow-berry/20 hover-lift">
-                Explore Products
-              </Link>
-            </div>
-          </Reveal>
           <Reveal delay={150}>
-            <div className="grid grid-cols-2 gap-4" style={{ perspective: "900px" }}>
-              <div className="bg-gradient-to-br from-blush to-peach rounded-3xl h-40 flex items-center justify-center text-6xl tilt-3d depth-shadow">🐶</div>
-              <div className="bg-gradient-to-br from-sage to-cream rounded-3xl h-40 flex items-center justify-center text-6xl mt-6 tilt-3d depth-shadow">🐱</div>
-              <div className="bg-gradient-to-br from-peach to-blush rounded-3xl h-40 flex items-center justify-center text-6xl tilt-3d depth-shadow">🏠</div>
-              <div className="bg-gradient-to-br from-cream to-sage rounded-3xl h-40 flex items-center justify-center text-6xl mt-6 tilt-3d depth-shadow">🛁</div>
+            <div className="relative h-[420px] md:h-[520px] perspective-1000">
+              <div className="absolute inset-0 flex items-center justify-center preserve-3d">
+                {/* soft platform */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-72 h-20 bg-sage/50 rounded-[50%] blur-md" />
+                {/* dog */}
+                <div className="absolute bottom-16 left-6 text-[150px] md:text-[190px] animate-pet-bob drop-shadow-2xl select-none preserve-3d" style={{ transformStyle: "preserve-3d" }}>
+                  <span className="inline-block animate-pet-sway">🐶</span>
+                  <span className="absolute -right-2 bottom-4 text-3xl animate-tail-wag">🐾</span>
+                </div>
+                {/* cat */}
+                <div className="absolute bottom-20 right-6 text-[140px] md:text-[170px] animate-float drop-shadow-2xl select-none" style={{ transformStyle: "preserve-3d" }}>
+                  <span className="inline-block animate-pet-sway" style={{ animationDelay: "0.8s" }}>🐱</span>
+                  <span className="absolute -right-4 bottom-6 text-3xl animate-tail-wag" style={{ animationDelay: "0.3s" }}>🐾</span>
+                </div>
+                {/* floating 3D bubbles */}
+                <div className="absolute top-8 left-1/3 w-20 h-20 rounded-full bg-white/60 backdrop-blur shadow-xl flex items-center justify-center text-3xl animate-float preserve-3d tilt-3d">🏠</div>
+                <div className="absolute top-20 right-1/4 w-16 h-16 rounded-full bg-peach/80 shadow-xl flex items-center justify-center text-2xl animate-float-slow preserve-3d tilt-3d">🛁</div>
+                <div className="absolute top-1/2 left-8 w-14 h-14 rounded-full bg-blush shadow-lg flex items-center justify-center text-2xl animate-float preserve-3d tilt-3d">🎾</div>
+              </div>
             </div>
           </Reveal>
         </div>
@@ -215,11 +98,6 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
             <div className="text-center mb-12">
-              <div className="flex justify-center gap-3 mb-4 text-2xl">
-                <span className="animate-paw-trail">🐾</span>
-                <span className="animate-paw-trail" style={{ animationDelay: "0.4s" }}>🐾</span>
-                <span className="animate-paw-trail" style={{ animationDelay: "0.8s" }}>🐾</span>
-              </div>
               <h2 className="text-3xl md:text-4xl font-extrabold text-navy">Shop by Category</h2>
               <p className="text-muted mt-2">Everything your pet needs, all in one place.</p>
             </div>
@@ -242,6 +120,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* PawPlay Match banner */}
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <Link href="/pawplay" className="block relative overflow-hidden rounded-3xl bg-gradient-to-r from-berry to-peach p-8 md:p-10 text-white hover-lift">
+              <div className="relative z-10 max-w-lg">
+                <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-semibold mb-3">New ✨</span>
+                <h2 className="text-3xl md:text-4xl font-extrabold leading-tight">PawPlay Match</h2>
+                <p className="mt-2 text-white/90">Answer 4 quick questions and we&apos;ll fetch the perfect products for your pet. Add them to your cart in one tap.</p>
+                <span className="mt-5 inline-block px-6 py-3 rounded-full bg-white text-berry font-semibold">Start Matching →</span>
+              </div>
+              <div className="absolute right-6 bottom-0 text-[160px] opacity-30 select-none hidden md:block">🐾</div>
+            </Link>
+          </Reveal>
+        </div>
+      </section>
+
       {/* Featured */}
       <section className="bg-white/60 backdrop-blur py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -257,14 +152,16 @@ export default function Home() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featured.map((p, i) => (
               <Reveal key={p.id} delay={i * 80}>
-                <div className="hover-lift"><ProductCard p={p} /></div>
+                <div className="hover-lift">
+                  <ProductCard p={p} />
+                </div>
               </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Bestsellers */}
+      {/* Bestsellers strip */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
@@ -276,7 +173,9 @@ export default function Home() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {bestsellers.map((p, i) => (
               <Reveal key={p.id} delay={i * 80}>
-                <div className="hover-lift"><ProductCard p={p} /></div>
+                <div className="hover-lift">
+                  <ProductCard p={p} />
+                </div>
               </Reveal>
             ))}
           </div>
@@ -355,16 +254,18 @@ export default function Home() {
       <NewsletterSection />
 
       {/* Contact */}
-      <section id="contact" className="bg-gradient-to-br from-sage to-blush py-16">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-navy">Get in touch</h2>
-          <p className="text-navy/70 mt-3">Questions about an order or a product? We&apos;re here to help.</p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="mailto:hello@pawberry.com" className="px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition shadow-lg shadow-berry/20 hover-lift">hello@pawberry.com</a>
-            <a href="tel:+18005551234" className="px-6 py-3 rounded-full bg-white/80 text-navy font-semibold hover:bg-white transition hover-lift">1-800-555-1234</a>
+      <Reveal>
+        <section id="contact" className="bg-gradient-to-br from-sage to-blush py-16">
+          <div className="max-w-3xl mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-navy">Get in touch</h2>
+            <p className="text-navy/70 mt-3">Questions about an order or a product? We&apos;re here to help.</p>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+              <a href="mailto:hello@pawberry.com" className="px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition shadow-lg shadow-berry/20 hover-lift">hello@pawberry.com</a>
+              <a href="tel:+18005551234" className="px-6 py-3 rounded-full bg-white/80 text-navy font-semibold hover:bg-white transition hover-lift">1-800-555-1234</a>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </Reveal>
     </div>
   );
 }
