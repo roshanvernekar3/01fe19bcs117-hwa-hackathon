@@ -1,4 +1,5 @@
 import { put, list, head } from "@vercel/blob";
+import { fetchBlobJson } from "@/lib/blob";
 
 export type OrderItem = {
   slug: string;
@@ -55,28 +56,16 @@ export async function saveOrder(input: Omit<Order, "id" | "createdAt" | "status"
 export async function getOrder(id: string): Promise<Order | null> {
   try {
     const meta = await head(`orders/${id}.json`);
-    const res = await fetch(meta.url, { cache: "no-store" });
-    if (!res.ok) return null;
-    return (await res.json()) as Order;
+    return await fetchBlobJson<Order>(meta.url);
   } catch {
     return null;
   }
 }
 
-export async function listOrders(limit = 50): Promise<Order[]> {
+export async function listOrders(limit = 100): Promise<Order[]> {
   try {
     const { blobs } = await list({ prefix: "orders/", limit });
-    const orders = await Promise.all(
-      blobs.map(async (b) => {
-        try {
-          const res = await fetch(b.url, { cache: "no-store" });
-          if (!res.ok) return null;
-          return (await res.json()) as Order;
-        } catch {
-          return null;
-        }
-      })
-    );
+    const orders = await Promise.all(blobs.map((b) => fetchBlobJson<Order>(b.url)));
     return (orders.filter(Boolean) as Order[]).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   } catch {
     return [];

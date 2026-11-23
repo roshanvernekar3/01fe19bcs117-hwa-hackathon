@@ -159,6 +159,9 @@ export default function AdminDashboard() {
 
       {tab === "orders" && (
         <div className="space-y-3">
+          <div className="flex justify-end">
+            <button onClick={loadOrders} className="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold hover:bg-slate-50">Refresh Orders</button>
+          </div>
           {orders.length === 0 && <div className="text-slate-500">No orders yet.</div>}
           {orders.map((o: AdminOrder) => (
             <div key={o.id} className="bg-white rounded-2xl p-4 border border-slate-100">

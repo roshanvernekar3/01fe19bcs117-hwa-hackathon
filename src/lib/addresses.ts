@@ -1,4 +1,5 @@
 import { put, head } from "@vercel/blob";
+import { fetchBlobJson } from "@/lib/blob";
 
 export type Address = {
   id: string;
@@ -19,9 +20,7 @@ function key(email: string) {
 export async function getAddresses(email: string): Promise<Address[]> {
   try {
     const meta = await head(key(email));
-    const res = await fetch(meta.url, { cache: "no-store" });
-    if (!res.ok) return [];
-    const data = (await res.json()) as Address[];
+    const data = await fetchBlobJson<Address[]>(meta.url);
     return Array.isArray(data) ? data : [];
   } catch {
     return [];

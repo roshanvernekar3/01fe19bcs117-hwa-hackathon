@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAddresses, saveAddresses, newAddressId, type Address } from "@/lib/addresses";
 
+export const dynamic = "force-dynamic";
+
 function auth(req: NextRequest) {
   return req.cookies.get("pb_user")?.value || null;
 }

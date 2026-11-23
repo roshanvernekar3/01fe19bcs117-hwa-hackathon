@@ -1,5 +1,6 @@
 import { put, list, head } from "@vercel/blob";
 import crypto from "crypto";
+import { fetchBlobJson } from "@/lib/blob";
 
 export type User = {
   email: string;
@@ -30,9 +31,7 @@ export function verifyPassword(password: string, stored: string) {
 export async function getUser(email: string): Promise<User | null> {
   try {
     const meta = await head(key(email));
-    const res = await fetch(meta.url, { cache: "no-store" });
-    if (!res.ok) return null;
-    return (await res.json()) as User;
+    return await fetchBlobJson<User>(meta.url);
   } catch {
     return null;
   }
@@ -50,17 +49,7 @@ export async function saveUser(user: User) {
 export async function listUsers(): Promise<User[]> {
   try {
     const { blobs } = await list({ prefix: "users/", limit: 100 });
-    const users = await Promise.all(
-      blobs.map(async (b) => {
-        try {
-          const res = await fetch(b.url, { cache: "no-store" });
-          if (!res.ok) return null;
-          return (await res.json()) as User;
-        } catch {
-          return null;
-        }
-      })
-    );
+    const users = await Promise.all(blobs.map((b) => fetchBlobJson<User>(b.url)));
     return users.filter(Boolean) as User[];
   } catch {
     return [];

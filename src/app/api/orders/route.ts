@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { saveOrder, listOrders, getOrder } from "@/lib/orders";
 import { put } from "@vercel/blob";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
   if (id) {
