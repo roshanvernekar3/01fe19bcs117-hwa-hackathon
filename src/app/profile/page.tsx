@@ -161,7 +161,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex items-center gap-3">
               <label className="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold cursor-pointer hover:bg-slate-50">
-                {savingAvatar ? "Uploading..." : "Upload photo"}
+                {savingAvatar ? "Uploading..." : "Change photo"}
                 <input
                   type="file"
                   accept="image/*"
@@ -179,6 +179,7 @@ export default function ProfilePage() {
                     setSavingAvatar(true);
                     try {
                       const dataUrl = await compressImage(file, 512, 0.85);
+                      setAvatar(dataUrl);
                       const res = await fetch("/api/auth/profile", {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
@@ -220,6 +221,31 @@ export default function ProfilePage() {
                 className="px-5 py-2 rounded-full bg-berry text-white text-sm font-semibold hover:bg-berry-dark transition disabled:opacity-60"
               >
                 {savingAvatar ? "Saving..." : "Save Avatar"}
+              </button>
+              <button
+                onClick={async () => {
+                  setAvatarMsg(null);
+                  setSavingAvatar(true);
+                  try {
+                    const res = await fetch("/api/auth/profile", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ avatar: "\u{1F43E}" }),
+                    });
+                    const d = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(d.error || "Could not remove avatar");
+                    setAvatar(d.user.avatar || "\u{1F43E}");
+                    setAvatarMsg("Photo removed!");
+                  } catch (err) {
+                    setAvatarMsg(err instanceof Error ? err.message : "Could not remove avatar");
+                  } finally {
+                    setSavingAvatar(false);
+                  }
+                }}
+                disabled={savingAvatar}
+                className="px-5 py-2 rounded-full border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition disabled:opacity-60"
+              >
+                {savingAvatar ? "Removing..." : "Remove Photo"}
               </button>
             </div>
             {avatarMsg && (
