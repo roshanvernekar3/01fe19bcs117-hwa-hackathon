@@ -33,6 +33,7 @@ export async function saveAddresses(email: string, addresses: Address[]) {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 }
 

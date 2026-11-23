@@ -36,6 +36,11 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const { id, status } = body ?? {};
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+    const allowed = ["received", "processing", "shipped", "delivered", "cancelled"];
+    if (status !== undefined && !allowed.includes(status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+    if (!status) return NextResponse.json({ error: "status required" }, { status: 400 });
     const order = await getOrder(id);
     if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
     // allow owner (by email) or admin
@@ -57,6 +62,7 @@ export async function PATCH(req: NextRequest) {
       access: "public",
       contentType: "application/json",
       addRandomSuffix: false,
+      allowOverwrite: true,
     });
     return NextResponse.json({ order });
   } catch {

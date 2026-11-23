@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest) {
       const match = String(body.image).match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
       if (match) {
         const buffer = Buffer.from(match[2], "base64");
-        const blob = await put(`avatars/${Date.now()}.jpg`, buffer, { access: "public", contentType: match[1] });
+        const blob = await put(`avatars/${Date.now()}.jpg`, buffer, { access: "public", contentType: match[1], allowOverwrite: true });
         user.avatar = blob.url;
       }
     }

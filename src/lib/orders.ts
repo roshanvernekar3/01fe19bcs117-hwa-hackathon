@@ -77,7 +77,7 @@ export async function listOrders(limit = 50): Promise<Order[]> {
         }
       })
     );
-    return orders.filter(Boolean) as Order[];
+    return (orders.filter(Boolean) as Order[]).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   } catch {
     return [];
   }

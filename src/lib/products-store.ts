@@ -21,5 +21,6 @@ export async function saveCatalog(products: Product[]) {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 }

@@ -43,6 +43,7 @@ export async function saveUser(user: User) {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 }
 

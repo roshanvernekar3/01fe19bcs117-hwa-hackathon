@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { Product } from "@/lib/products";
+
+type OrderStatus = "received" | "processing" | "shipped" | "delivered" | "cancelled";
 
 type AdminOrder = {
   id: string;
@@ -9,6 +12,7 @@ type AdminOrder = {
   customer: { name: string; email: string; phone?: string; address: string; city: string; zip: string; country: string };
   items: { name: string; qty: number }[];
   total: number;
+  status: OrderStatus;
   paymentMethod: string;
   paymentStatus: string;
 };
@@ -21,6 +25,7 @@ export default function AdminDashboard() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
   const [msg, setMsg] = useState("");
+  const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
 
   async function loadProducts() {
     const res = await fetch("/api/admin/products", { cache: "no-store" });
@@ -31,6 +36,25 @@ export default function AdminDashboard() {
     const res = await fetch("/api/orders", { cache: "no-store" });
     const d = await res.json();
     setOrders(d.orders || []);
+  }
+
+  async function updateOrderStatus(id: string, status: OrderStatus) {
+    setUpdatingOrder(id);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || "Could not update status");
+      setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: d.order.status } : o)));
+      setMsg(`Order ${id} updated to ${d.order.status}.`);
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Could not update status");
+    } finally {
+      setUpdatingOrder(null);
+    }
   }
 
   useEffect(() => {
@@ -140,7 +164,7 @@ export default function AdminDashboard() {
             <div key={o.id} className="bg-white rounded-2xl p-4 border border-slate-100">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-bold text-navy">{o.id}</div>
+                  <Link href={`/orders/${encodeURIComponent(o.id)}`} className="font-bold text-navy hover:text-berry hover:underline">{o.id}</Link>
                   <div className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString()}</div>
                 </div>
                 <div className="text-right">
@@ -154,6 +178,29 @@ export default function AdminDashboard() {
               </div>
               <div className="mt-2 text-xs text-slate-500">
                 {o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
+                  o.status === "cancelled" ? "bg-red-100 text-red-600" :
+                  o.status === "delivered" ? "bg-green-100 text-green-600" :
+                  "bg-berry/10 text-berry"
+                }`}>{o.status}</span>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-slate-500">Status</label>
+                  <select
+                    value={o.status}
+                    disabled={updatingOrder === o.id}
+                    onChange={(e) => updateOrderStatus(o.id, e.target.value as OrderStatus)}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 text-sm bg-white disabled:opacity-60"
+                  >
+                    <option value="received">Received</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  <Link href={`/orders/${encodeURIComponent(o.id)}`} className="text-xs font-semibold text-berry hover:underline">Details →</Link>
+                </div>
               </div>
             </div>
           ))}
