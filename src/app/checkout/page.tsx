@@ -27,6 +27,19 @@ export default function CheckoutPage() {
       .then((r) => r.json())
       .then((d: GatewayConfig) => setGateway(d))
       .catch(() => {});
+    // prefill from logged-in user
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.user) {
+          setForm((f) => ({
+            ...f,
+            name: d.user.name || f.name,
+            email: d.user.email || f.email,
+          }));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   if (items.length === 0) {
@@ -51,10 +64,19 @@ export default function CheckoutPage() {
   }
 
   async function placeOrder(extra: { paymentMethod: "cod" | "razorpay" | "demo"; paymentStatus: "pending" | "paid" | "test"; paymentId?: string }) {
+    // ensure order is tied to logged-in account if present
+    let customer = { ...form };
+    try {
+      const r = await fetch("/api/auth/me", { cache: "no-store" });
+      const d = await r.json();
+      if (d?.user?.email) {
+        customer = { ...customer, name: d.user.name || customer.name, email: d.user.email };
+      }
+    } catch {}
     const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customer: form, items, notes: form.notes, ...extra }),
+      body: JSON.stringify({ customer, items, notes: form.notes, ...extra }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Order failed");
