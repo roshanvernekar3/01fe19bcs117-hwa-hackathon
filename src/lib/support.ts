@@ -74,7 +74,7 @@ export async function getComplaint(id: string): Promise<Complaint | null> {
 }
 
 export async function createComplaint(input: { userEmail: string; userName: string; topic: SupportTopic; orderId?: string; message: string }): Promise<Complaint> {
-  const complaints = await listComplaints();
+  const _complaints = await listComplaints();
   const id = "CMP-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
   const complaint: Complaint = {
     id,

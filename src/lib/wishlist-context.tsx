@@ -24,8 +24,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setItems(JSON.parse(raw) as string[]);
     } catch {}
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHydrated(true);
+      setHydrated(true);
   }, []);
 
   useEffect(() => {

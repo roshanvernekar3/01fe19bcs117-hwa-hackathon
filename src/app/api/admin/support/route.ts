@@ -2,9 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { updateComplaint, listComplaints } from "@/lib/support";
-import type { ComplaintStatus } from "@/lib/support";
-
-const STATUSES: ComplaintStatus[] = ["open", "in-progress", "resolved", "closed"];
 
 export async function GET(req: NextRequest) {
   const cookie = req.cookies.get("pb_admin")?.value;

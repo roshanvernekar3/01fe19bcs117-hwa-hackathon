@@ -28,8 +28,7 @@ export default function ProfilePage() {
   >([]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    (async () => {
+      (async () => {
       try {
         const m = await fetch("/api/auth/me", { cache: "no-store" }).then((r) => r.json());
         setMe(m);
@@ -309,7 +308,7 @@ export default function ProfilePage() {
           </div>
           {addresses.length === 0 ? (
             <p className="text-sm text-slate-500">
-              No saved addresses yet. Your address is saved automatically when you tick "Save this address for next time" at checkout.
+              No saved addresses yet. Your address is saved automatically when you tick &ldquo;Save this address for next time&rdquo; at checkout.
             </p>
           ) : (
             <div className="space-y-3">

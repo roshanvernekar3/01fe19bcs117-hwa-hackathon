@@ -62,9 +62,10 @@ export default function FlyLayer() {
       timersRef.current.push(t);
     };
     document.addEventListener("pawberry:fly", handler);
+    const timers = timersRef.current;
     return () => {
       document.removeEventListener("pawberry:fly", handler);
-      timersRef.current.forEach((t) => clearTimeout(t));
+      timers.forEach((t) => clearTimeout(t));
     };
   }, []);
 
