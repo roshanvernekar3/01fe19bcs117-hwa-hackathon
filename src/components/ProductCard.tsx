@@ -3,12 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useWishlist } from "@/lib/wishlist-context";
-import { useSound } from "@/components/SoundProvider";
 import type { Product } from "@/lib/products";
 
 export default function ProductCard({ p }: { p: Product }) {
   const { has, toggle } = useWishlist();
-  const sound = useSound();
   const wished = has(p.slug);
 
   return (
@@ -18,7 +16,6 @@ export default function ProductCard({ p }: { p: Product }) {
           e.preventDefault();
           e.stopPropagation();
           toggle(p.slug);
-          sound.play("sparkle");
         }}
         aria-label="wishlist"
         className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur shadow flex items-center justify-center text-lg hover:scale-110 transition"

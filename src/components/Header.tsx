@@ -3,32 +3,20 @@
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import ProfileMenu from "@/components/ProfileMenu";
-import { useSound } from "@/components/SoundProvider";
 
 export default function Header() {
   const { count } = useCart();
   const { count: wcount } = useWishlist();
-  const sound = useSound();
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [soundOpen, setSoundOpen] = useState(false);
-  const soundRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/auth/me", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setIsAdmin(Boolean(d?.isAdmin)))
       .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    function onClick(e: MouseEvent) {
-      if (soundRef.current && !soundRef.current.contains(e.target as Node)) setSoundOpen(false);
-    }
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
   return (
@@ -49,37 +37,6 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <div ref={soundRef} className="relative">
-            <button
-              onClick={() => setSoundOpen((o) => !o)}
-              data-no-sound="true"
-              aria-label="sound settings"
-              className="inline-flex items-center px-3 py-2 rounded-full hover:bg-slate-100 transition text-xl"
-            >
-              {sound.enabled ? "🔊" : "🔇"}
-            </button>
-            {soundOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-3 z-50">
-                <button
-                  onClick={() => { sound.toggle(); sound.play("menu"); }}
-                  data-no-sound="true"
-                  className="w-full text-left text-sm font-semibold text-navy mb-2"
-                >
-                  {sound.enabled ? "Sound On" : "Sound Off"}
-                </button>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  value={sound.volume}
-                  onChange={(e) => sound.setVolume(Number(e.target.value))}
-                  className="w-full"
-                  data-no-sound="true"
-                />
-              </div>
-            )}
-          </div>
           <ProfileMenu />
           <Link href="/wishlist" className="relative inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition">
             <span className="text-xl">♡</span>
@@ -97,7 +54,7 @@ export default function Header() {
               </span>
             )}
           </Link>
-          <button className="md:hidden text-2xl" onClick={() => { setOpen(!open); sound.play("menu"); }} aria-label="menu" data-no-sound="true">
+          <button className="md:hidden text-2xl" onClick={() => setOpen(!open)} aria-label="menu">
             {open ? "✕" : "☰"}
           </button>
         </div>
