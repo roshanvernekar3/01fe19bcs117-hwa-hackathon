@@ -3,6 +3,7 @@ import { CATEGORIES } from "@/lib/products";
 import { getCatalog } from "@/lib/products-store";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
+import PetSound from "@/components/PetSound";
 import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
 import NewsletterSection from "@/components/NewsletterSection";
@@ -75,12 +76,12 @@ export default async function Home() {
                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-72 h-20 bg-sage/50 rounded-[50%] blur-md" />
                 {/* dog */}
                 <div className="absolute bottom-16 left-6 text-[150px] md:text-[190px] animate-pet-bob drop-shadow-2xl select-none preserve-3d" style={{ transformStyle: "preserve-3d" }}>
-                  <span className="inline-block animate-pet-sway">🐶</span>
+                  <PetSound emoji="🐶" sound="bark" className="inline-block animate-pet-sway" />
                   <span className="absolute -right-2 bottom-4 text-3xl animate-tail-wag">🐾</span>
                 </div>
                 {/* cat */}
                 <div className="absolute bottom-20 right-6 text-[140px] md:text-[170px] animate-float drop-shadow-2xl select-none" style={{ transformStyle: "preserve-3d" }}>
-                  <span className="inline-block animate-pet-sway" style={{ animationDelay: "0.8s" }}>🐱</span>
+                  <PetSound emoji="🐱" sound="meow" className="inline-block animate-pet-sway" />
                   <span className="absolute -right-4 bottom-6 text-3xl animate-tail-wag" style={{ animationDelay: "0.3s" }}>🐾</span>
                 </div>
                 {/* floating 3D bubbles */}

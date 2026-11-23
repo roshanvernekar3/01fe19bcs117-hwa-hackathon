@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/lib/products";
 import { useCart } from "@/lib/cart-context";
+import { useSound } from "@/components/SoundProvider";
 import Mascot from "@/components/Mascot";
 
 type PetType = "dog" | "cat";
@@ -43,6 +44,7 @@ const ACTIVITY_LABELS: { key: Activity; label: string; emoji: string }[] = [
 
 export default function PawPlayMatch() {
   const { add } = useCart();
+  const sound = useSound();
   const [products, setProducts] = useState<Product[]>([]);
   const [step, setStep] = useState(0);
   const [pet, setPet] = useState<PetType | null>(null);
@@ -119,6 +121,7 @@ export default function PawPlayMatch() {
 
   function handleAdd(p: Product) {
     add({ slug: p.slug, name: p.name, price: p.price, emoji: p.emoji });
+    sound.play("cart");
     setAdded((a) => ({ ...a, [p.slug]: true }));
     setTimeout(() => setAdded((a) => ({ ...a, [p.slug]: false })), 1500);
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSound } from "@/components/SoundProvider";
 import { useCart } from "@/lib/cart-context";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -10,6 +11,7 @@ type GatewayConfig = { enabled: boolean; keyId: string | null };
 export default function CheckoutPage() {
   const { items, total, clear } = useCart();
   const router = useRouter();
+  const sound = useSound();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gateway, setGateway] = useState<GatewayConfig>({ enabled: false, keyId: null });
@@ -58,6 +60,7 @@ export default function CheckoutPage() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Order failed");
     clear();
+    sound.play("notify");
     router.push(`/order-confirmation?id=${data.order.id}`);
   }
 
