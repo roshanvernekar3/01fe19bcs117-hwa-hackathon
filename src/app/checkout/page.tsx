@@ -14,6 +14,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [gateway, setGateway] = useState<GatewayConfig>({ enabled: false, keyId: null });
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "online">("cod");
+  const [showDemoModal, setShowDemoModal] = useState(false);
   const [form, setForm] = useState({
     name: "", email: "", phone: "", address: "", city: "", zip: "", country: "India", notes: "",
   });
@@ -49,7 +50,7 @@ export default function CheckoutPage() {
     return true;
   }
 
-  async function placeOrder(extra: { paymentMethod: "cod" | "razorpay"; paymentStatus: "pending" | "paid"; paymentId?: string }) {
+  async function placeOrder(extra: { paymentMethod: "cod" | "razorpay" | "demo"; paymentStatus: "pending" | "paid" | "test"; paymentId?: string }) {
     const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -69,7 +70,9 @@ export default function CheckoutPage() {
     try {
       if (paymentMethod === "online") {
         if (!gateway.enabled || !gateway.keyId) {
-          throw new Error("Online payment is not configured. Please choose Cash on Delivery.");
+          setShowDemoModal(true);
+          setSubmitting(false);
+          return;
         }
         // create razorpay order
         const r = await fetch("/api/payment/razorpay/create-order", {
@@ -127,6 +130,7 @@ export default function CheckoutPage() {
   }
 
   return (
+    <>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid md:grid-cols-3 gap-8">
       <form onSubmit={handleSubmit} className="md:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 space-y-4">
         <h1 className="text-2xl font-extrabold text-navy mb-2">Checkout</h1>
@@ -163,18 +167,19 @@ export default function CheckoutPage() {
                 <div className="text-xs text-slate-500">Pay when your order arrives.</div>
               </div>
             </label>
-            <label className={`flex items-center gap-3 p-3 rounded-xl border-2 transition ${gateway.enabled ? "cursor-pointer" : "opacity-50 cursor-not-allowed"} ${paymentMethod === "online" ? "border-berry bg-berry/5" : "border-slate-200"}`}>
+            <label className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition ${paymentMethod === "online" ? "border-berry bg-berry/5" : "border-slate-200"}`}>
               <input
                 type="radio"
                 name="pm"
                 checked={paymentMethod === "online"}
-                disabled={!gateway.enabled}
                 onChange={() => setPaymentMethod("online")}
               />
               <div>
-                <div className="font-semibold text-navy text-sm">Pay Online (Razorpay)</div>
+                <div className="font-semibold text-navy text-sm">
+                  {gateway.enabled ? "Pay Online (Razorpay)" : "Pay Online (Demo Mode)"}
+                </div>
                 <div className="text-xs text-slate-500">
-                  {gateway.enabled ? "UPI, cards, netbanking via Razorpay." : "Not configured. Add RAZORPAY_KEY_ID/SECRET to enable."}
+                  {gateway.enabled ? "UPI, cards, netbanking via Razorpay." : "Test checkout — no real money. Razorpay keys not configured."}
                 </div>
               </div>
             </label>
@@ -212,7 +217,53 @@ export default function CheckoutPage() {
           <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="text-berry">₹{grand}</span></div>
         </div>
       </div>
+
+      {showDemoModal && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm text-center">
+            <div className="text-4xl mb-2">💳</div>
+            <h3 className="text-xl font-extrabold text-navy mb-1">Demo Payment</h3>
+            <p className="text-slate-500 text-sm mb-4">
+              Test mode — no real money. Amount: <span className="font-bold text-berry">₹{grand}</span>
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  setShowDemoModal(false);
+                  setSubmitting(true);
+                  try {
+                    await placeOrder({ paymentMethod: "demo", paymentStatus: "test" });
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Order failed");
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+                className="flex-1 px-4 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition"
+              >
+                Pay (Success)
+              </button>
+              <button
+                onClick={() => {
+                  setShowDemoModal(false);
+                  setError("Payment failed. Your order was not placed.");
+                }}
+                className="flex-1 px-4 py-3 rounded-full border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
+              >
+                Fail
+              </button>
+            </div>
+            <button
+              onClick={() => setShowDemoModal(false)}
+              className="mt-3 text-xs text-slate-400 hover:text-slate-600"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   );
 }
 

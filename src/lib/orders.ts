@@ -7,7 +7,7 @@ export type OrderItem = {
   qty: number;
 };
 
-export type PaymentMethod = "cod" | "razorpay";
+export type PaymentMethod = "cod" | "razorpay" | "demo";
 export type Order = {
   id: string;
   createdAt: string;
@@ -26,7 +26,7 @@ export type Order = {
   total: number;
   status: "received" | "processing" | "shipped" | "delivered" | "cancelled";
   paymentMethod: PaymentMethod;
-  paymentStatus: "pending" | "paid" | "failed";
+  paymentStatus: "pending" | "paid" | "failed" | "test";
   paymentId?: string;
   notes?: string;
 };
