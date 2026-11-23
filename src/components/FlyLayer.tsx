@@ -42,7 +42,7 @@ export default function FlyLayer() {
       const r = src.getBoundingClientRect();
       const target =
         detail.target ??
-        (document.querySelector<HTMLElement>(detail.kind === "cart" ? '[data-pawberry-fly="cart"]' : '[data-pberry-fly="wish"]') as HTMLElement | null);
+        (document.querySelector<HTMLElement>(detail.kind === "cart" ? '[data-paw-fly-target="nav-cart"]' : '[data-paw-fly-target="nav-wishlist"]') as HTMLElement | null);
       const endR = target ? target.getBoundingClientRect() : null;
       const endRect: FlyRect = endR
         ? { x: endR.x, y: endR.y, w: endR.width, h: endR.height }
@@ -55,7 +55,7 @@ export default function FlyLayer() {
         setToast({ id: Date.now(), message: detail.kind === "cart" ? "Added to Cart! 🛒" : "Added to Wishlist! ❤️", x: endRect.x, y: endRect.y });
         const tt = setTimeout(() => setToast(null), 1400);
         timersRef.current.push(tt);
-        const icon = detail.target ?? document.querySelector<HTMLElement>(detail.kind === "cart" ? '[data-pberry-fly="cart"]' : '[data-pawberry-fly="wish"]');
+        const icon = detail.target ?? document.querySelector<HTMLElement>(detail.kind === "cart" ? '[data-paw-fly-target="nav-cart"]' : '[data-paw-fly-target="nav-wishlist"]');
         if (icon) icon.classList.add("pawberry-fly-pop");
         setTimeout(() => icon?.classList.remove("pawberry-fly-pop"), 900);
       }, FLY_MS);

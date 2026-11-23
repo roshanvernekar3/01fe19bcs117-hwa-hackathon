@@ -31,7 +31,7 @@ export default function AddToCart({ product }: { product: Product }) {
     const el = wishBtnRef.current;
     if (el) {
       if (has(product.slug)) {
-        const icon = document.querySelector<HTMLElement>('[data-pawberry-fly="wish"]');
+        const icon = document.querySelector<HTMLElement>('[data-paw-fly-target="nav-wishlist"]');
         document.dispatchEvent(new CustomEvent("pawberry:fly", { detail: { kind: "wish", source: icon ?? el, emoji: product.emoji, name: product.name, target: wishSources.get(product.slug) ?? el } }));
       } else {
         wishSources.set(product.slug, el);

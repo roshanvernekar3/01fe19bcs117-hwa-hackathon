@@ -18,7 +18,7 @@ export default function ProductCard({ p }: { p: Product }) {
           e.stopPropagation();
           const el = e.currentTarget as HTMLElement;
           if (wished) {
-            const icon = document.querySelector<HTMLElement>('[data-pawberry-fly="wish"]');
+            const icon = document.querySelector<HTMLElement>('[data-paw-fly-target="nav-wishlist"]');
             document.dispatchEvent(new CustomEvent("pawberry:fly", { detail: { kind: "wish", source: icon ?? el, emoji: p.emoji, name: p.name, target: wishSources.get(p.slug) ?? el } }));
           } else {
             wishSources.set(p.slug, el);
