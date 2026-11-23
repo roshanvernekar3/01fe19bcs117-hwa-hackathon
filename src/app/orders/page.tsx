@@ -64,8 +64,11 @@ export default function OrdersPage() {
             {order.customer.name}<br />{order.customer.address}, {order.customer.city} {order.customer.zip}
           </div>
           <div className="mt-2 text-xs text-slate-500 capitalize">
-            Payment: {order.paymentMethod === "razorpay" ? "Paid online" : "Cash on delivery"} · {order.paymentStatus}
+            Payment: {order.paymentMethod === "razorpay" ? "Paid online" : order.paymentMethod === "demo" ? "Demo (test)" : "Cash on delivery"} · {order.paymentStatus}
           </div>
+          <Link href={`/orders/${encodeURIComponent(order.id)}`} className="mt-4 inline-block text-sm font-semibold text-berry hover:underline">
+            View full details →
+          </Link>
         </div>
       )}
 

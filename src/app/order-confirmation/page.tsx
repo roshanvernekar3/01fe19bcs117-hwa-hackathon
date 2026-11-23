@@ -43,7 +43,8 @@ function ConfirmationInner() {
         </div>
       )}
       <div className="mt-8 flex gap-3 justify-center">
-        <Link href="/products" className="px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition">Continue Shopping</Link>
+        {id && <Link href={`/orders/${encodeURIComponent(id)}`} className="px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition">View Order</Link>}
+        <Link href="/products" className="px-6 py-3 rounded-full border border-slate-200 font-semibold hover:bg-slate-50">Continue Shopping</Link>
         <Link href="/" className="px-6 py-3 rounded-full border border-slate-200 font-semibold hover:bg-slate-50">Home</Link>
       </div>
     </div>

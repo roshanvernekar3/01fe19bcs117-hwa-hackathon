@@ -10,7 +10,11 @@ export default function ProfilePage() {
   const [me, setMe] = useState<Me | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"profile" | "orders" | "wishlist">("profile");
+  const [tab, setTab] = useState<"profile" | "orders" | "wishlist">(() => {
+    if (typeof window === "undefined") return "profile";
+    const t = new URLSearchParams(window.location.search).get("tab");
+    return t === "orders" || t === "wishlist" ? t : "profile";
+  });
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string>("");
   const [savingAvatar, setSavingAvatar] = useState(false);
@@ -202,7 +206,7 @@ export default function ProfilePage() {
               <div key={o.id} className="bg-white rounded-2xl p-5 border border-slate-100">
                 <div className="flex flex-wrap justify-between items-start gap-2">
                   <div>
-                    <div className="font-bold text-navy">{o.id}</div>
+                    <Link href={`/orders/${encodeURIComponent(o.id)}`} className="font-bold text-navy hover:text-berry hover:underline">{o.id}</Link>
                     <div className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString()}</div>
                   </div>
                   <div className="text-right">
@@ -229,6 +233,11 @@ export default function ProfilePage() {
                     {cancelling === o.id ? "Cancelling..." : "Cancel order"}
                   </button>
                 )}
+                <div className="mt-3">
+                  <Link href={`/orders/${encodeURIComponent(o.id)}`} className="text-xs font-semibold text-berry hover:underline">
+                    View details →
+                  </Link>
+                </div>
               </div>
             ))
           )}
