@@ -86,13 +86,13 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
             <h3 className="font-semibold text-navy mb-3">{stepsTitle}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {steps.map((s, i) => (
-                <div key={s.title} className="bg-gradient-to-br from-cream to-blush rounded-2xl p-4 border border-white hover-lift">
+                <div key={s.title} className="bg-gradient-to-br from-cream to-blush rounded-2xl p-4 border border-white hover-lift h-full flex flex-col">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="w-7 h-7 rounded-full bg-berry text-white text-sm font-bold flex items-center justify-center">{i + 1}</span>
                     <span className="text-2xl">{s.emoji}</span>
                   </div>
                   <div className="font-bold text-navy text-sm">{s.title}</div>
-                  <p className="text-slate-600 text-xs mt-1 leading-relaxed">{s.desc}</p>
+                  <p className="text-slate-600 text-xs mt-1 leading-relaxed mt-auto pt-1">{s.desc}</p>
                 </div>
               ))}
             </div>
@@ -120,7 +120,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
             <h2 className="text-2xl font-extrabold text-navy mb-6">You may also like</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {related.map((p) => (
-                <div key={p.id} className="hover-lift">
+                <div key={p.id} className="hover-lift h-full">
                   <ProductCard p={p} />
                 </div>
               ))}

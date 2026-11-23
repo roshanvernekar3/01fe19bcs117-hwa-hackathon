@@ -246,17 +246,17 @@ export default function PawPlayMatch() {
               {results.map((p, i) => (
                 <div
                   key={p.slug}
-                  className="bg-white/90 backdrop-blur rounded-2xl p-4 border border-white shadow-sm hover-lift"
+                  className="bg-white/90 backdrop-blur rounded-2xl p-4 border border-white shadow-sm hover-lift h-full flex flex-col"
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-1">
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                       <Image src={p.image} alt={p.name} fill className="object-contain p-1" sizes="80px" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 flex flex-col">
                       <div className="font-bold text-navy">{p.name}</div>
                       <div className="text-xs text-slate-500 line-clamp-2">{p.tagline}</div>
-                      <div className="mt-2 flex items-center justify-between">
+                      <div className="mt-auto pt-2 flex items-center justify-between">
                         <span className="text-berry font-extrabold">₹{p.price}</span>
                         <button
                           onClick={() => handleAdd(p)}

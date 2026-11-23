@@ -9,9 +9,10 @@ import { wishSources } from "@/components/FlyLayer";
 export default function ProductCard({ p }: { p: Product }) {
   const { has, toggle } = useWishlist();
   const wished = has(p.slug);
+  const lowStock = p.inStock && (p.stock ?? 0) > 0 && (p.stock ?? 0) <= 5;
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden border border-slate-100 tilt-card relative depth-shadow">
+    <div className="group bg-white rounded-2xl overflow-hidden border border-slate-100 tilt-card relative depth-shadow h-full flex flex-col">
       <button
         onClick={(e) => {
           e.preventDefault();
@@ -31,22 +32,22 @@ export default function ProductCard({ p }: { p: Product }) {
       >
         {wished ? "❤️" : "🤍"}
       </button>
-      <Link href={`/products/${p.slug}`}>
+      <Link href={`/products/${p.slug}`} className="flex flex-col flex-1">
         <div className="relative h-48 bg-gradient-to-br from-cream to-blush overflow-hidden tilt-layer transition-transform duration-400">
           <Image src={p.image} alt={p.name} fill className="object-contain p-2 group-hover:scale-105 transition-transform duration-500" sizes="(max-width:768px) 100vw, 25vw" />
           {p.badge && <span className="absolute top-3 left-3 text-xs font-semibold text-berry bg-white/90 backdrop-blur px-2 py-0.5 rounded-full shadow">{p.badge}</span>}
           {!p.inStock && <span className="absolute bottom-3 left-3 text-xs font-bold text-red-600 bg-white/90 backdrop-blur px-2 py-0.5 rounded-full shadow">Out of Stock</span>}
         </div>
-        <div className="p-4">
-          <h3 className="font-bold text-navy">{p.name}</h3>
-          <p className="text-slate-500 text-sm line-clamp-2 mt-1">{p.tagline}</p>
-          <div className="mt-3 flex items-center justify-between">
+        <div className="p-4 flex flex-col flex-1">
+          <h3 className="font-bold text-navy leading-snug line-clamp-1 min-h-[1.5rem]">{p.name}</h3>
+          <p className="text-slate-500 text-sm line-clamp-2 mt-1 min-h-[2.5rem]">{p.tagline}</p>
+          <div className="mt-auto pt-3 flex items-center justify-between">
             <span className="text-berry font-extrabold">₹{p.price}</span>
             <span className="text-xs text-slate-400">★ {p.rating}</span>
           </div>
-          {p.inStock && (p.stock ?? 0) > 0 && (p.stock ?? 0) <= 5 && (
-            <div className="mt-2 text-xs font-semibold text-amber-600">Only {(p.stock ?? 0)} left!</div>
-          )}
+          <div className="mt-1 min-h-[1.25rem] text-xs font-semibold text-amber-600">
+            {lowStock ? `Only ${p.stock} left!` : ""}
+          </div>
         </div>
       </Link>
     </div>

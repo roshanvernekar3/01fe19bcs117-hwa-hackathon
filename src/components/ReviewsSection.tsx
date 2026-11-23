@@ -72,13 +72,13 @@ export default function ReviewsSection() {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {reviews.map((r) => (
-              <div key={r.id} className="bg-white rounded-2xl p-5 border border-slate-100 hover-lift">
+              <div key={r.id} className="bg-white rounded-2xl p-5 border border-slate-100 hover-lift h-full flex flex-col">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-berry">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
                   <span className="text-xs text-slate-400">{new Date(r.createdAt).toLocaleDateString()}</span>
                 </div>
-                <p className="text-slate-700 text-sm leading-relaxed">&ldquo;{r.text}&rdquo;</p>
-                <div className="mt-3 font-semibold text-navy text-sm">— {r.name}</div>
+                <p className="text-slate-700 text-sm leading-relaxed line-clamp-4 flex-1">&ldquo;{r.text}&rdquo;</p>
+                <div className="mt-3 pt-2 font-semibold text-navy text-sm">— {r.name}</div>
               </div>
             ))}
           </div>

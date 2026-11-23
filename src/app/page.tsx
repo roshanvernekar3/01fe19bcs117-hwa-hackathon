@@ -115,12 +115,12 @@ export default async function Home() {
             {CATEGORIES.map((c, i) => {
               const gradients = ["from-blush to-peach", "from-sage to-cream", "from-peach to-blush"];
               return (
-                <Reveal key={c.slug} delay={i * 100}>
-                  <Link href={`/products?category=${c.slug}`} className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${gradients[i]} p-8 hover:shadow-xl hover:-translate-y-1 transition border border-white/60 hover-lift block`}>
+                <Reveal key={c.slug} delay={i * 100} className="h-full">
+                  <Link href={`/products?category=${c.slug}`} className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${gradients[i]} p-8 hover:shadow-xl hover:-translate-y-1 transition border border-white/60 hover-lift block h-full flex flex-col`}>
                     <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">{c.emoji}</div>
                     <h3 className="text-xl font-bold text-navy">{c.name}</h3>
                     <p className="text-navy/70 mt-1 text-sm">{c.desc}</p>
-                    <span className="mt-4 inline-block text-berry font-semibold text-sm group-hover:translate-x-1 transition">Shop now →</span>
+                    <span className="mt-auto pt-4 inline-block text-berry font-semibold text-sm group-hover:translate-x-1 transition">Shop now →</span>
                   </Link>
                 </Reveal>
               );
@@ -160,8 +160,8 @@ export default async function Home() {
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featured.map((p, i) => (
-              <Reveal key={p.id} delay={i * 80}>
-                <div className="hover-lift">
+              <Reveal key={p.id} delay={i * 80} className="h-full">
+                <div className="hover-lift h-full">
                   <ProductCard p={p} />
                 </div>
               </Reveal>
@@ -181,8 +181,8 @@ export default async function Home() {
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {bestsellers.map((p, i) => (
-              <Reveal key={p.id} delay={i * 80}>
-                <div className="hover-lift">
+              <Reveal key={p.id} delay={i * 80} className="h-full">
+                <div className="hover-lift h-full">
                   <ProductCard p={p} />
                 </div>
               </Reveal>
@@ -218,8 +218,8 @@ export default async function Home() {
               { emoji: "🧼", title: "Easy to Clean", desc: "Machine-washable and quick-clean designs." },
               { emoji: "❤️", title: "Made with Love", desc: "Crafted by a team that adores animals." },
             ].map((f, i) => (
-              <Reveal key={f.title} delay={i * 60}>
-                <div className="bg-white/80 rounded-2xl p-5 border border-white hover-lift h-full">
+              <Reveal key={f.title} delay={i * 60} className="h-full">
+                <div className="bg-white/80 rounded-2xl p-5 border border-white hover-lift h-full flex flex-col">
                   <div className="text-3xl mb-2">{f.emoji}</div>
                   <div className="font-bold text-navy">{f.title}</div>
                   <p className="text-muted text-sm mt-1">{f.desc}</p>
@@ -245,12 +245,12 @@ export default async function Home() {
               { emoji: "🏠", title: "Cozy Home Bundle", desc: "Houses and hideouts for sweet dreams.", href: "/products?category=pet-houses", grad: "from-sage to-cream" },
               { emoji: "🛁", title: "Fresh & Clean Bundle", desc: "Washroom essentials for a tidy home.", href: "/products?category=cat-washrooms", grad: "from-peach to-blush" },
             ].map((g, i) => (
-              <Reveal key={g.title} delay={i * 100}>
-                <Link href={g.href} className={`group block rounded-3xl bg-gradient-to-br ${g.grad} p-8 border border-white hover-lift`}>
+              <Reveal key={g.title} delay={i * 100} className="h-full">
+                <Link href={g.href} className={`group block rounded-3xl bg-gradient-to-br ${g.grad} p-8 border border-white hover-lift h-full flex flex-col`}>
                   <div className="text-5xl mb-3 group-hover:scale-110 transition">{g.emoji}</div>
                   <h3 className="text-xl font-bold text-navy">{g.title}</h3>
                   <p className="text-navy/70 text-sm mt-1">{g.desc}</p>
-                  <span className="mt-4 inline-block text-berry font-semibold text-sm group-hover:translate-x-1 transition">Shop bundle →</span>
+                  <span className="mt-auto pt-4 inline-block text-berry font-semibold text-sm group-hover:translate-x-1 transition">Shop bundle →</span>
                 </Link>
               </Reveal>
             ))}
