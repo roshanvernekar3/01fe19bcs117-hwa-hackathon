@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveOrder, listOrders, getOrder } from "@/lib/orders";
-import { put } from "@vercel/blob";
+import { saveOrder, listOrders, getOrder, saveOrderState } from "@/lib/orders";
 
 export const dynamic = "force-dynamic";
 
@@ -60,12 +59,7 @@ export async function PATCH(req: NextRequest) {
     } else {
       return NextResponse.json({ error: "Not allowed" }, { status: 403 });
     }
-    await put(`orders/${order.id}.json`, JSON.stringify(order), {
-      access: "public",
-      contentType: "application/json",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-    });
+    await saveOrderState(order);
     return NextResponse.json({ order });
   } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
