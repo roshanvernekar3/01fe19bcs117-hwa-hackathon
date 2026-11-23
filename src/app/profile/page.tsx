@@ -19,6 +19,7 @@ export default function ProfilePage() {
   });
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string>("");
+  const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
   const [savingAvatar, setSavingAvatar] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState<string | null>(null);
   const [viewerSrc, setViewerSrc] = useState<string | null>(null);
@@ -33,7 +34,9 @@ export default function ProfilePage() {
         const m = await fetch("/api/auth/me", { cache: "no-store" }).then((r) => r.json());
         setMe(m);
         if (m?.user?.email) {
-          setAvatar(m.user.avatar || "🐾");
+          const savedAvatar = m.user.avatar || "🐾";
+          setAvatar(savedAvatar);
+          setPreviewAvatar(null);
           const res = await fetch("/api/orders/mine", { cache: "no-store" });
           if (res.ok) {
             const d = await res.json();
@@ -103,6 +106,78 @@ export default function ProfilePage() {
   }
 
   const user = me.user;
+  const displayAvatar = previewAvatar ?? avatar;
+  const isUploadedImage = displayAvatar && (displayAvatar.startsWith("http") || displayAvatar.startsWith("data:"));
+  const isEmojiOnly = !displayAvatar || (!displayAvatar.startsWith("http") && !displayAvatar.startsWith("data:"));
+
+  async function handlePhotoUpload(file: File) {
+    if (!file.type.startsWith("image/")) {
+      setAvatarMsg("Please choose an image file.");
+      return;
+    }
+    setAvatarMsg(null);
+    setSavingAvatar(true);
+    try {
+      const dataUrl = await compressImage(file, 512, 0.85);
+      setPreviewAvatar(dataUrl);
+      const res = await fetch("/api/auth/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || "Upload failed");
+      setAvatar(d.user.avatar);
+      setPreviewAvatar(null);
+      setAvatarMsg("Photo saved!");
+    } catch (err) {
+      setAvatarMsg(err instanceof Error ? err.message : "Upload failed");
+      setPreviewAvatar(null);
+    } finally {
+      setSavingAvatar(false);
+    }
+  }
+
+  async function saveEmojiAvatar() {
+    setAvatarMsg(null);
+    setSavingAvatar(true);
+    try {
+      const res = await fetch("/api/auth/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || "Could not save avatar");
+      setAvatar(d.user.avatar);
+      setAvatarMsg("Avatar saved!");
+    } catch (err) {
+      setAvatarMsg(err instanceof Error ? err.message : "Could not save avatar");
+    } finally {
+      setSavingAvatar(false);
+    }
+  }
+
+  async function removeUploadedPhoto() {
+    setAvatarMsg(null);
+    setSavingAvatar(true);
+    try {
+      const res = await fetch("/api/auth/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: "\u{1F43E}" }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || "Could not remove avatar");
+      setAvatar(d.user.avatar || "\u{1F43E}");
+      setPreviewAvatar(null);
+      setAvatarMsg("Photo removed!");
+    } catch (err) {
+      setAvatarMsg(err instanceof Error ? err.message : "Could not remove avatar");
+    } finally {
+      setSavingAvatar(false);
+    }
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -110,11 +185,11 @@ export default function ProfilePage() {
       <div className="bg-white rounded-3xl p-6 border border-slate-100 mb-6 flex flex-col sm:flex-row items-center gap-5">
         <div
           onClick={() => {
-            if (user.avatar && (user.avatar.startsWith("http") || user.avatar.startsWith("data:"))) setViewerSrc(user.avatar);
+            if (displayAvatar && (displayAvatar.startsWith("http") || displayAvatar.startsWith("data:"))) setViewerSrc(displayAvatar);
           }}
           className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl flex-shrink-0 overflow-hidden cursor-pointer"
         >
-          {user.avatar && (user.avatar.startsWith("http") ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : user.avatar)}
+          {displayAvatar && (displayAvatar.startsWith("http") ? <img src={displayAvatar} alt="" className="w-full h-full object-cover" /> : displayAvatar)}
         </div>
         <div className="flex-1 text-center sm:text-left">
           <h1 className="text-2xl font-extrabold text-navy">{user.name}</h1>
@@ -145,10 +220,10 @@ export default function ProfilePage() {
             <h2 className="text-xl font-bold text-navy mb-4">Profile Picture</h2>
             <div className="flex items-center gap-4 mb-4">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl overflow-hidden">
-                {avatar && (avatar.startsWith("http") || avatar.startsWith("data:")) ? (
-                  <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+                {displayAvatar && isUploadedImage ? (
+                  <img src={displayAvatar} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  avatar || "🐾"
+                  displayAvatar || "🐾"
                 )}
               </div>
               <div className="flex-1">
@@ -157,8 +232,8 @@ export default function ProfilePage() {
                   {["🐾","🐶","🐱","🐰","🐹","🦊","🐻","🐼","🐨","🐯","🦁","🐮"].map((e) => (
                     <button
                       key={e}
-                      onClick={() => setAvatar(e)}
-                      className={`w-10 h-10 rounded-full text-xl flex items-center justify-center border-2 transition ${avatar === e ? "border-berry bg-berry/10" : "border-slate-200 hover:border-berry"}`}
+                      onClick={() => { setAvatar(e); setPreviewAvatar(null); }}
+                      className={`w-10 h-10 rounded-full text-xl flex items-center justify-center border-2 transition ${avatar === e && !previewAvatar ? "border-berry bg-berry/10" : "border-slate-200 hover:border-berry"}`}
                     >
                       {e}
                     </button>
@@ -166,101 +241,51 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Upload photo */}
               <label className="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold cursor-pointer hover:bg-slate-50">
-                {savingAvatar ? "Uploading..." : "Change photo"}
+                {savingAvatar && previewAvatar ? "Uploading..." : "Change photo"}
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
                   disabled={savingAvatar}
-                  onChange={async (e) => {
+                  onChange={(e) => {
                     const file = e.target.files?.[0];
                     e.target.value = "";
-                    if (!file) return;
-                    if (!file.type.startsWith("image/")) {
-                      setAvatarMsg("Please choose an image file.");
-                      return;
-                    }
-                    setAvatarMsg(null);
-                    setSavingAvatar(true);
-                    try {
-                      const dataUrl = await compressImage(file, 512, 0.85);
-                      setAvatar(dataUrl);
-                      const res = await fetch("/api/auth/profile", {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ image: dataUrl }),
-                      });
-                      const d = await res.json().catch(() => ({}));
-                      if (!res.ok) throw new Error(d.error || "Upload failed");
-                      setAvatar(d.user.avatar);
-                      setAvatarMsg("Photo saved!");
-                    } catch (err) {
-                      setAvatarMsg(err instanceof Error ? err.message : "Upload failed");
-                    } finally {
-                      setSavingAvatar(false);
-                    }
+                    if (file) handlePhotoUpload(file);
                   }}
                 />
               </label>
-              {(!avatar || (!avatar.startsWith("http") && !avatar.startsWith("data:"))) && (
-              <button
-                onClick={async () => {
-                  setAvatarMsg(null);
-                  setSavingAvatar(true);
-                  try {
-                    const res = await fetch("/api/auth/profile", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ avatar }),
-                    });
-                    const d = await res.json().catch(() => ({}));
-                    if (!res.ok) throw new Error(d.error || "Could not save avatar");
-                    setAvatar(d.user.avatar);
-                    setAvatarMsg("Avatar saved!");
-                  } catch (err) {
-                    setAvatarMsg(err instanceof Error ? err.message : "Could not save avatar");
-                  } finally {
-                    setSavingAvatar(false);
-                  }
-                }}
-                disabled={savingAvatar}
-                className="px-5 py-2 rounded-full bg-berry text-white text-sm font-semibold hover:bg-berry-dark transition disabled:opacity-60"
-              >
-                {savingAvatar ? "Saving..." : "Save Avatar"}
-              </button>
+
+              {/* Save emoji avatar - only when no uploaded image and not uploading */}
+              {isEmojiOnly && !savingAvatar && (
+                <button
+                  onClick={saveEmojiAvatar}
+                  className="px-5 py-2 rounded-full bg-berry text-white text-sm font-semibold hover:bg-berry-dark transition"
+                >
+                  Save Avatar
+                </button>
               )}
-              {avatar && (avatar.startsWith("http") || avatar.startsWith("data:")) && (
-              <button
-                onClick={async () => {
-                  setAvatarMsg(null);
-                  setSavingAvatar(true);
-                  try {
-                    const res = await fetch("/api/auth/profile", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ avatar: "\u{1F43E}" }),
-                    });
-                    const d = await res.json().catch(() => ({}));
-                    if (!res.ok) throw new Error(d.error || "Could not remove avatar");
-                    setAvatar(d.user.avatar || "\u{1F43E}");
-                    setAvatarMsg("Photo removed!");
-                  } catch (err) {
-                    setAvatarMsg(err instanceof Error ? err.message : "Could not remove avatar");
-                  } finally {
-                    setSavingAvatar(false);
-                  }
-                }}
-                disabled={savingAvatar}
-                className="px-5 py-2 rounded-full border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition disabled:opacity-60"
-              >
-                {savingAvatar ? "Removing..." : "Remove Photo"}
-              </button>
+
+              {/* Remove uploaded photo - only when uploaded image exists and not uploading */}
+              {isUploadedImage && !savingAvatar && (
+                <button
+                  onClick={removeUploadedPhoto}
+                  className="px-5 py-2 rounded-full border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition"
+                >
+                  Remove Photo
+                </button>
+              )}
+
+              {/* Loading state - show spinner when any save/upload in progress */}
+              {savingAvatar && (
+                <span className="text-sm text-slate-500">Saving…</span>
               )}
             </div>
             {avatarMsg && (
-              <p className={`mt-3 text-sm ${avatarMsg.includes("saved") ? "text-green-600" : "text-red-500"}`}>{avatarMsg}</p>
+              <p className={`mt-3 text-sm ${avatarMsg.includes("saved") || avatarMsg.includes("removed") ? "text-green-600" : "text-red-500"}`}>{avatarMsg}</p>
             )}
           </div>
 
@@ -284,7 +309,7 @@ export default function ProfilePage() {
           </div>
           {addresses.length === 0 ? (
             <p className="text-sm text-slate-500">
-              No saved addresses yet. Your address is saved automatically when you tick “Save this address for next time” at checkout.
+              No saved addresses yet. Your address is saved automatically when you tick "Save this address for next time" at checkout.
             </p>
           ) : (
             <div className="space-y-3">
@@ -374,6 +399,7 @@ export default function ProfilePage() {
     </div>
   );
 }
+
 function compressImage(file: File, maxSize: number, quality: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
