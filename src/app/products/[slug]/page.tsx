@@ -4,6 +4,7 @@ export const revalidate = 0;
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getCatalog } from "@/lib/products-store";
+import type { Product } from "@/lib/products";
 import AddToCart from "@/components/AddToCart";
 import NotifyMe from "@/components/NotifyMe";
 import ProductImage from "@/components/ProductImage";
@@ -12,7 +13,11 @@ import Reveal from "@/components/Reveal";
 
 export default async function ProductDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const catalog = await getCatalog();
+  const h = await (await import("next/headers")).headers();
+  const host = h.get("host") || "localhost:3000";
+  const proto = h.get("x-forwarded-proto") || "https";
+  const res = await fetch(`${proto}://${host}/api/products`, { cache: "no-store" });
+  const catalog = res.ok ? ((await res.json()).products as Product[]) : await getCatalog();
   const product = catalog.find((p) => p.slug === slug);
   if (!product) notFound();
 
