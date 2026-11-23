@@ -15,6 +15,7 @@ export default function ProductCard({ p }: { p: Product }) {
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          document.dispatchEvent(new CustomEvent("pawberry:fly", { detail: { kind: "wish", source: e.currentTarget as HTMLElement, emoji: p.emoji, image: p.image, name: p.name } }));
           toggle(p.slug);
         }}
         aria-label="wishlist"

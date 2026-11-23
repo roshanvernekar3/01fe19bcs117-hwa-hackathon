@@ -41,7 +41,7 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           <ProfileMenu />
-          <Link href="/wishlist" className="relative inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition">
+          <Link href="/wishlist" data-pawberry-fly="wish" className="relative inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition">
             <span className="text-xl">♡</span>
             {wcount > 0 && (
               <span className="absolute -top-1 -right-1 bg-berry text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -49,7 +49,7 @@ export default function Header() {
               </span>
             )}
           </Link>
-          <Link href="/cart" className="relative inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition">
+          <Link href="/cart" data-pawberry-fly="cart" className="relative inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition">
             <span className="text-xl">🛒</span>
             {count > 0 && (
               <span className="absolute -top-1 -right-1 bg-berry text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -68,8 +68,8 @@ export default function Header() {
           <div className="px-4 py-3 flex flex-col gap-3 text-sm font-medium">
             <Link href="/products" onClick={() => setOpen(false)}>Shop All</Link>
             <Link href="/pawplay" onClick={() => setOpen(false)}>PawPlay Match</Link>
-            <Link href="/wishlist" onClick={() => setOpen(false)}>Wishlist ({wcount})</Link>
-            <Link href="/cart" onClick={() => setOpen(false)}>Cart ({count})</Link>
+            <Link href="/wishlist" data-pawberry-fly="wish" onClick={() => setOpen(false)}>Wishlist ({wcount})</Link>
+            <Link href="/cart" data-pawberry-fly="cart" onClick={() => setOpen(false)}>Cart ({count})</Link>
             <Link href="/products?category=interactive-toys" onClick={() => setOpen(false)}>Interactive Toys</Link>
             <Link href="/products?category=pet-houses" onClick={() => setOpen(false)}>Pet Houses</Link>
             <Link href="/products?category=cat-washrooms" onClick={() => setOpen(false)}>Cat Washrooms</Link>
