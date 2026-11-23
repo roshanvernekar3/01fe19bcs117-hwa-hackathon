@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type ChatMsg = { id: string; from: "user" | "bot"; text: string; complaintId?: string; status?: string };
+type ChatMsg = { id: string; from: "user" | "bot"; text: string; complaintId?: string; status?: string; tick?: "sent" | "delivered" | "read" };
 type Complaint = { id: string; status: string; topic: string; message: string };
 type FlowKind = "cancel" | "return" | "refund" | "support";
 type Pending = { kind: FlowKind; orderId?: string; issue?: string; order?: { id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] } } | null;
@@ -26,6 +26,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<ChatMsg[]>([{ id: "g1", from: "bot", text: "Hi! I'm PawBot 🐾 ... How can I help you today?" }]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [typing, setTyping] = useState(false);
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
   const [flow, setFlow] = useState<{ kind: FlowKind; orderId?: string } | null>(null);
   const [pending, setPending] = useState<Pending>(null);
@@ -71,14 +72,14 @@ export default function ChatWidget() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, open]);
+  }, [messages, open, typing]);
 
   function addBot(text: string, complaintId?: string, status?: string) {
     setMessages((m) => [...m, { id: "b" + chatSeq++, from: "bot" as const, text, complaintId, status }]);
   }
 
-  function addUser(text: string) {
-    setMessages((m) => [...m, { id: "u" + chatSeq++, from: "user" as const, text }]);
+  function addUser(text: string, tick?: "sent" | "delivered" | "read", id?: string) {
+    setMessages((m) => [...m, { id: id || ("u" + chatSeq++), from: "user" as const, text, tick }]);
   }
 
   async function lookupOrder(): Promise<{ id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] } | null> {
@@ -97,6 +98,8 @@ export default function ChatWidget() {
     } catch {
       addBot("Sorry, I could not look up your orders right now.");
       return null;
+    } finally {
+      setTyping(false);
     }
   }
 
@@ -104,7 +107,9 @@ export default function ChatWidget() {
     const t = text.trim();
     if (!t) return;
     setSending(true);
-    addUser(t);
+    setTyping(true);
+    const userMsgId = "u" + chatSeq++;
+    addUser(t, "sent", userMsgId);
     setInput("");
     try {
       const r = await fetch("/api/support/complaints", {
@@ -119,6 +124,8 @@ export default function ChatWidget() {
         setFlow(null);
         setPending(null);
         addBot(`Complaint ${c.id} filed. Status: ${c.status}. Our team will review it shortly.`, c.id, c.status);
+        setMessages((m) => m.map((x) => (x.id === userMsgId ? { ...x, tick: "delivered" as const } : x)));
+        setMessages((m) => m.map((x) => (x.id === userMsgId ? { ...x, tick: "read" as const } : x)));
       } else {
         addBot(d?.error || "Sorry, something went wrong. Please try again.");
       }
@@ -126,6 +133,7 @@ export default function ChatWidget() {
       addBot("Sorry, I could not send that. Please try again.");
     }
     setSending(false);
+    setTyping(false);
   }
 
   function startFlow(kind: FlowKind, orderId?: string) {
@@ -225,9 +233,21 @@ export default function ChatWidget() {
             <button onClick={() => setOpen(false)} aria-label="Close chat" className="text-white text-lg">✕</button>
           </div>
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 bg-slate-50">
+            {typing && (
+              <div className="max-w-[85%] px-3 py-2 rounded-2xl bg-white border border-slate-100 rounded-bl-sm self-start flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-slate-400 animate-chat-typing" />
+                <span className="w-2 h-2 rounded-full bg-slate-400 animate-chat-typing" style={{ animationDelay: "0.15s" }} />
+                <span className="w-2 h-2 rounded-full bg-slate-400 animate-chat-typing" style={{ animationDelay: "0.3s" }} />
+              </div>
+            )}
             {messages.map((m) => (
               <div key={m.id} className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm ${m.from === "user" ? "bg-berry text-white rounded-br-sm self-end" : "bg-white border border-slate-100 text-navy rounded-bl-sm self-start"}`}>
                 {m.text}
+                {m.from === "user" && m.tick && (
+                  <span className="ml-1 inline-block text-[11px] font-bold" style={{ color: m.tick === "read" ? "#53bdeb" : "#25d366" }}>
+                    {m.tick === "sent" ? "✓" : "✓✓"}
+                  </span>
+                )}
                 {m.complaintId && <div className="text-[10px] mt-1 opacity-70">Complaint {m.complaintId} · {m.status}</div>}
               </div>
             ))}

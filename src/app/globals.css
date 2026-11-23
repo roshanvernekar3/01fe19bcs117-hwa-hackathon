@@ -216,3 +216,5 @@ a, button {
 .pawberry-fly { animation-name: pawberry-fly-anim; animation-duration: 0.55s; animation-timing-function: cubic-bezier(0.22,0.61,0.36,1); animation-fill-mode: forwards; will-change: transform; }
 @keyframes avatar-zoom { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .animate-avatar-zoom { animation: avatar-zoom 0.35s ease both; }
+@keyframes chat-typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-4px); opacity: 1; } }
+.animate-chat-typing { animation: chat-typing 1.2s ease-in-out infinite; }
