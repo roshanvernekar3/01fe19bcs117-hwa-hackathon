@@ -9,9 +9,15 @@ import Reveal from "@/components/Reveal";
 import GallerySection from "@/components/GallerySection";
 import ReviewsSection from "@/components/ReviewsSection";
 import NewsletterSection from "@/components/NewsletterSection";
+import { headers } from "next/headers";
+import type { Product } from "@/lib/products";
 
 export default async function Home() {
-  const PRODUCTS = await getCatalog();
+  const h = await headers();
+  const host = h.get("host") || "localhost:3000";
+  const proto = h.get("x-forwarded-proto") || "https";
+  const res = await fetch(`${proto}://${host}/api/products`, { cache: "no-store" });
+  const PRODUCTS: Product[] = res.ok ? (await res.json()).products : await getCatalog();
   const featured = PRODUCTS.slice(0, 4);
   const bestsellers = PRODUCTS.filter((p) => p.badge).slice(0, 4);
 
