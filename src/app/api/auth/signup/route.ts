@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
       name,
       passwordHash: hashPassword(password),
       role,
+      avatar: "🐾",
       createdAt: new Date().toISOString(),
     };
     await saveUser(user);

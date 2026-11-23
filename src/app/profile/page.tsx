@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Order } from "@/lib/orders";
 
-type Me = { user: { email: string; name: string; role: string } | null; isAdmin: boolean };
+type Me = { user: { email: string; name: string; role: string; avatar?: string } | null; isAdmin: boolean };
 
 export default function ProfilePage() {
   const [me, setMe] = useState<Me | null>(null);
@@ -12,6 +12,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"profile" | "orders" | "wishlist">("profile");
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [avatar, setAvatar] = useState<string>("");
+  const [savingAvatar, setSavingAvatar] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -20,6 +22,7 @@ export default function ProfilePage() {
         const m = await fetch("/api/auth/me", { cache: "no-store" }).then((r) => r.json());
         setMe(m);
         if (m?.user?.email) {
+          setAvatar(m.user.avatar || "🐾");
           const res = await fetch("/api/orders/mine", { cache: "no-store" });
           if (res.ok) {
             const d = await res.json();
@@ -72,7 +75,9 @@ export default function ProfilePage() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Header card */}
       <div className="bg-white rounded-3xl p-6 border border-slate-100 mb-6 flex flex-col sm:flex-row items-center gap-5">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl flex-shrink-0">👤</div>
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl flex-shrink-0 overflow-hidden">
+          {user.avatar && (user.avatar.startsWith("http") ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : user.avatar)}
+        </div>
         <div className="flex-1 text-center sm:text-left">
           <h1 className="text-2xl font-extrabold text-navy">{user.name}</h1>
           <p className="text-slate-500 text-sm">{user.email}</p>
@@ -97,8 +102,82 @@ export default function ProfilePage() {
       </div>
 
       {tab === "profile" && (
-        <div className="bg-white rounded-2xl p-6 border border-slate-100">
-          <h2 className="text-xl font-bold text-navy mb-4">Account Details</h2>
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl p-6 border border-slate-100">
+            <h2 className="text-xl font-bold text-navy mb-4">Profile Picture</h2>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl overflow-hidden">
+                {avatar && (avatar.startsWith("http") ? <img src={avatar} alt="" className="w-full h-full object-cover" /> : avatar)}
+              </div>
+              <div className="flex-1">
+                <div className="text-sm text-slate-500 mb-2">Choose a pet avatar</div>
+                <div className="flex flex-wrap gap-2">
+                  {["🐾","🐶","🐱","🐰","🐹","🦊","🐻","🐼","🐨","🐯","🦁","🐮"].map((e) => (
+                    <button
+                      key={e}
+                      onClick={() => setAvatar(e)}
+                      className={`w-10 h-10 rounded-full text-xl flex items-center justify-center border-2 transition ${avatar === e ? "border-berry bg-berry/10" : "border-slate-200 hover:border-berry"}`}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold cursor-pointer hover:bg-slate-50">
+                Upload photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                      setSavingAvatar(true);
+                      try {
+                        const res = await fetch("/api/auth/profile", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ image: reader.result }),
+                        });
+                        const d = await res.json();
+                        if (res.ok) setAvatar(d.user.avatar);
+                      } finally {
+                        setSavingAvatar(false);
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
+              <button
+                onClick={async () => {
+                  setSavingAvatar(true);
+                  try {
+                    const res = await fetch("/api/auth/profile", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ avatar }),
+                    });
+                    const d = await res.json();
+                    if (res.ok) setAvatar(d.user.avatar);
+                  } finally {
+                    setSavingAvatar(false);
+                  }
+                }}
+                disabled={savingAvatar}
+                className="px-5 py-2 rounded-full bg-berry text-white text-sm font-semibold hover:bg-berry-dark transition disabled:opacity-60"
+              >
+                {savingAvatar ? "Saving..." : "Save Avatar"}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-slate-100">
+            <h2 className="text-xl font-bold text-navy mb-4">Account Details</h2>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
             <div><span className="text-slate-500">Name</span><div className="font-semibold text-navy">{user.name}</div></div>
             <div><span className="text-slate-500">Email</span><div className="font-semibold text-navy">{user.email}</div></div>
@@ -109,8 +188,8 @@ export default function ProfilePage() {
             <Link href="/orders" className="text-berry font-semibold hover:underline">View all orders →</Link>
           </div>
         </div>
+        </div>
       )}
-
       {tab === "orders" && (
         <div className="space-y-3">
           {orders.length === 0 ? (

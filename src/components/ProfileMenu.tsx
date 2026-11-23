@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
-type Me = { user: { email: string; name: string; role: string } | null; isAdmin: boolean };
+type Me = { user: { email: string; name: string; role: string; avatar?: string } | null; isAdmin: boolean };
 
 export default function ProfileMenu() {
   const [open, setOpen] = useState(false);
@@ -51,7 +51,7 @@ export default function ProfileMenu() {
         aria-label="profile"
         className="inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition"
       >
-        <span className="text-xl">{user ? "👤" : " 👤"}</span>
+        <span className="text-xl">{user ? (user.avatar || "👤") : "👤"}</span>
       </button>
       {open && (
         <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">

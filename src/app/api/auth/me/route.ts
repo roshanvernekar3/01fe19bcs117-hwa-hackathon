@@ -12,5 +12,5 @@ export async function GET(req: NextRequest) {
   const adminCookie = req.cookies.get("pb_admin")?.value;
   const isAdmin = adminCookie === adminToken() || user?.role === "admin";
   if (!user) return NextResponse.json({ user: null, isAdmin });
-  return NextResponse.json({ user: { email: user.email, name: user.name, role: user.role }, isAdmin });
+  return NextResponse.json({ user: { email: user.email, name: user.name, role: user.role, avatar: user.avatar || "🐾" }, isAdmin });
 }
