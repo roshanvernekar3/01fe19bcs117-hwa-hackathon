@@ -63,6 +63,13 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
             <span className="text-3xl font-extrabold text-berry">₹{product.price}</span>
             <span className="text-sm text-slate-400">★ {product.rating} ({product.reviews} reviews)</span>
           </div>
+          {product.inStock ? (
+            <div className="mt-2 text-sm font-semibold text-slate-600">
+              {product.stock ? `In stock (${product.stock} available)` : "In stock"}
+            </div>
+          ) : (
+            <div className="mt-2 text-sm font-semibold text-red-600">Out of stock</div>
+          )}
           <p className="mt-6 text-slate-700 leading-relaxed">{product.description}</p>
 
           <div className="mt-6">

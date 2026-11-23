@@ -35,6 +35,9 @@ export default function ProductCard({ p }: { p: Product }) {
             <span className="text-berry font-extrabold">₹{p.price}</span>
             <span className="text-xs text-slate-400">★ {p.rating}</span>
           </div>
+          {p.inStock && (p.stock ?? 0) > 0 && (p.stock ?? 0) <= 5 && (
+            <div className="mt-2 text-xs font-semibold text-amber-600">Only {(p.stock ?? 0)} left!</div>
+          )}
         </div>
       </Link>
     </div>

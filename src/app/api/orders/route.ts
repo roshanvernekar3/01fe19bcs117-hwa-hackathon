@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveOrder, listOrders, getOrder, saveOrderState } from "@/lib/orders";
+import { getCatalog, saveCatalog } from "@/lib/products-store";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,23 @@ export async function PATCH(req: NextRequest) {
     // only allow cancel by owner; status changes by admin
     if (status === "cancelled") {
       if (!isOwner && !isAdmin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      // restock if eligible
+      if (order.stockDeducted && !order.restocked) {
+        try {
+          const catalog = await getCatalog();
+          let changed = false;
+          for (const it of order.items) {
+            const p = catalog.find((x) => x.slug === it.slug);
+            if (p) {
+              p.stock = (p.stock ?? 0) + it.qty;
+              p.inStock = true;
+              changed = true;
+            }
+          }
+          if (changed) await saveCatalog(catalog);
+          order.restocked = true;
+        } catch {}
+      }
       order.status = "cancelled";
     } else if (isAdmin && status) {
       order.status = status;
@@ -109,7 +127,23 @@ export async function POST(req: NextRequest) {
       paymentMethod: body?.paymentMethod === "razorpay" ? "razorpay" : body?.paymentMethod === "demo" ? "demo" : "cod",
       paymentStatus: body?.paymentStatus === "paid" ? "paid" : body?.paymentStatus === "test" ? "test" : "pending",
       paymentId: body?.paymentId,
+      stockDeducted: true,
     });
+    // decrement stock
+    try {
+      const catalog = await getCatalog();
+      let changed = false;
+      for (const it of items) {
+        const p = catalog.find((x) => x.slug === it.slug);
+        if (p) {
+          const stock = p.stock ?? (p.inStock ? 12 : 0);
+          p.stock = Math.max(0, stock - it.qty);
+          p.inStock = (p.stock ?? 0) > 0;
+          changed = true;
+        }
+      }
+      if (changed) await saveCatalog(catalog);
+    } catch {}
     return NextResponse.json({ success: true, orderId: order.id, order }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to place order" }, { status: 500 });

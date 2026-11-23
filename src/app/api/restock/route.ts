@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addSubscriber } from "@/lib/restock";
+import { addSubscriber, getSubscribers, removeSubscriber } from "@/lib/restock";
 
 export const dynamic = "force-dynamic";
 
@@ -17,14 +17,24 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const slug = String(req.nextUrl.searchParams.get("slug") || "").trim();
+    const email = String(req.nextUrl.searchParams.get("email") || "").trim().toLowerCase();
+    if (!slug || !email) return NextResponse.json({ error: "slug and email required" }, { status: 400 });
+    const { removed, subscribers } = await removeSubscriber(slug, email);
+    return NextResponse.json({ ok: true, removed, alreadyUnsubscribed: !removed, total: subscribers.length });
+  } catch {
+    return NextResponse.json({ error: "Failed to unsubscribe" }, { status: 500 });
+  }
+}
+
 export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get("slug");
   if (!slug) return NextResponse.json({ error: "slug required" }, { status: 400 });
-  // admin only for listing subscribers
   const cookie = req.cookies.get("pb_admin")?.value;
   const expected = process.env.ADMIN_PASSWORD || "pawberry-admin";
   if (cookie !== expected) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { getSubscribers } = await import("@/lib/restock");
   const subscribers = await getSubscribers(slug);
   return NextResponse.json({ slug, subscribers, count: subscribers.length });
 }

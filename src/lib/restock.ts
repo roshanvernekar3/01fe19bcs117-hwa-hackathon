@@ -1,4 +1,4 @@
-import { put, head, list, del } from "@vercel/blob";
+import { put, head, del } from "@vercel/blob";
 
 export async function getSubscribers(slug: string): Promise<string[]> {
   try {
@@ -24,6 +24,24 @@ export async function addSubscriber(slug: string, email: string): Promise<{ adde
     allowOverwrite: true,
   });
   return { added: true, subscribers: next };
+}
+
+export async function removeSubscriber(slug: string, email: string): Promise<{ removed: boolean; subscribers: string[] }> {
+  const list = await getSubscribers(slug);
+  const norm = email.trim().toLowerCase();
+  if (!list.includes(norm)) return { removed: false, subscribers: list };
+  const next = list.filter((e) => e !== norm);
+  if (next.length === 0) {
+    await del(`restock/${slug}.json`);
+  } else {
+    await put(`restock/${slug}.json`, JSON.stringify(next), {
+      access: "public",
+      contentType: "application/json",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+    });
+  }
+  return { removed: true, subscribers: next };
 }
 
 export async function clearSubscribers(slug: string) {

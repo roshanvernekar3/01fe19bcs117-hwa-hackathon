@@ -30,6 +30,8 @@ export type Order = {
   paymentStatus: "pending" | "paid" | "failed" | "test";
   paymentId?: string;
   notes?: string;
+  stockDeducted?: boolean;
+  restocked?: boolean;
 };
 
 function genId() {
@@ -69,6 +71,8 @@ export async function saveOrder(
     ...input,
     paymentMethod: input.paymentMethod ?? "cod",
     paymentStatus: input.paymentStatus ?? "pending",
+    stockDeducted: input.stockDeducted ?? true,
+    restocked: false,
     id: genId(),
     createdAt: new Date().toISOString(),
     status: "received",
