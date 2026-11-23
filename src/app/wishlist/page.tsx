@@ -58,25 +58,26 @@ export default function WishlistPage() {
               <div className="p-4 flex flex-col flex-1">
                 <h3 className="font-bold text-navy leading-snug line-clamp-1 min-h-[1.5rem]">{p.name}</h3>
                 <p className="text-slate-500 text-sm line-clamp-2 mt-1 min-h-[2.5rem]">{p.tagline}</p>
-                <div className="mt-auto pt-3 flex items-center justify-between gap-2 flex-wrap">
-                  <span className="text-berry font-extrabold">₹{p.price}</span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => add({ slug: p.slug, name: p.name, price: p.price, emoji: p.emoji })}
-                      className="px-3 py-1.5 rounded-full bg-berry text-white text-xs font-semibold hover:bg-berry-dark transition"
-                    >
-                      Add to Cart
-                    </button>
-                    <button
-                      onClick={() => remove(p.slug)}
-                      className="px-3 py-1.5 rounded-full border border-slate-200 text-xs font-semibold hover:bg-slate-50 transition"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
               </div>
             </Link>
+            {/* Action buttons OUTSIDE the Link - no navigation on click */}
+            <div className="p-4 pt-0 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap bg-white">
+              <span className="text-berry font-extrabold">₹{p.price}</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => add({ slug: p.slug, name: p.name, price: p.price, emoji: p.emoji })}
+                  className="px-3 py-1.5 rounded-full bg-berry text-white text-xs font-semibold hover:bg-berry-dark transition"
+                >
+                  Add to Cart
+                </button>
+                <button
+                  onClick={() => remove(p.slug)}
+                  className="px-3 py-1.5 rounded-full border border-slate-200 text-xs font-semibold hover:bg-slate-50 transition"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
           </div>
         ))}
       </div>
