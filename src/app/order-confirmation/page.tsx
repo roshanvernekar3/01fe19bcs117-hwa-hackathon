@@ -21,16 +21,43 @@ function ConfirmationInner() {
       setLoading(false);
       return;
     }
-    setLoading(true);
-    setError(null);
-    fetch(`/api/orders?id=${id}`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.order) setOrder(d.order);
-        else setError("Order not found");
-      })
-      .catch(() => setError("Failed to load order"))
-      .finally(() => setLoading(false));
+    let attempts = 0;
+    const maxAttempts = 8;
+    const fetchOrder = async () => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLoading(true);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError(null);
+      try {
+        const res = await fetch(`/api/orders?id=${id}`, { cache: "no-store" });
+        const d = await res.json();
+        if (d?.order) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setOrder(d.order);
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setLoading(false);
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(fetchOrder, 400 * attempts);
+        } else {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setError("Order not found. Please check your order ID.");
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setLoading(false);
+        }
+      } catch {
+        if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(fetchOrder, 400 * attempts);
+        } else {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setError("Failed to load order");
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setLoading(false);
+        }
+      }
+    };
+    fetchOrder();
   }, [id]);
 
   if (loading) return <PawLoader message="Loading your order…" />;
@@ -64,7 +91,7 @@ function ConfirmationInner() {
         <div className="mt-4 flex justify-between text-sm">
           <span className="text-slate-500">Payment</span>
           <span className="font-semibold text-navy capitalize">
-            {order.paymentMethod === "razorpay" ? "Paid online (Razorpay)" : "Cash on Delivery"} · {order.paymentStatus}
+            {order.paymentMethod === "razorpay" ? "Paid online (Razorpay)" : order.paymentMethod === "demo" ? "Demo payment" : "Cash on Delivery"} · {order.paymentStatus}
           </span>
         </div>
         <div className="mt-2 font-bold text-navy">Total: <span className="text-berry">₹{order.total}</span></div>

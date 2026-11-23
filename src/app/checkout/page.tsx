@@ -106,7 +106,12 @@ export default function CheckoutPage() {
     }
     clear();
     // Add timestamp to prevent any caching issues
-    router.push(`/order-confirmation?id=${data.order.id}&t=${Date.now()}`);
+    const redirectUrl = `/order-confirmation?id=${data.order.id}&t=${Date.now()}`;
+    try {
+      router.push(redirectUrl);
+    } catch {
+      window.location.href = redirectUrl;
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
