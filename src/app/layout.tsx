@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Providers } from "@/components/Providers";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Providers>
+          <LoadingScreen />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
