@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/products";
 import { getCatalog } from "@/lib/products-store";
