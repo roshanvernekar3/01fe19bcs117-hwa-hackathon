@@ -5,6 +5,7 @@ import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import type { Product } from "@/lib/products";
 import Link from "next/link";
+import { wishSources } from "@/components/FlyLayer";
 
 export default function AddToCart({ product }: { product: Product }) {
   const { add, items } = useCart();
@@ -28,7 +29,15 @@ export default function AddToCart({ product }: { product: Product }) {
 
   function handleWish() {
     const el = wishBtnRef.current;
-    if (el) document.dispatchEvent(new CustomEvent("pawberry:fly", { detail: { kind: "wish", source: el, emoji: product.emoji, image: product.image, name: product.name } }));
+    if (el) {
+      if (has(product.slug)) {
+        const icon = document.querySelector<HTMLElement>('[data-pawberry-fly="wish"]');
+        document.dispatchEvent(new CustomEvent("pawberry:fly", { detail: { kind: "wish", source: icon ?? el, emoji: product.emoji, name: product.name, target: wishSources.get(product.slug) ?? el } }));
+      } else {
+        wishSources.set(product.slug, el);
+        document.dispatchEvent(new CustomEvent("pawberry:fly", { detail: { kind: "wish", source: el, emoji: product.emoji, image: product.image, name: product.name } }));
+      }
+    }
     toggle(product.slug);
   }
 

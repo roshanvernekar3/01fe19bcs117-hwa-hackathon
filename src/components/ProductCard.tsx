@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useWishlist } from "@/lib/wishlist-context";
 import type { Product } from "@/lib/products";
+import { wishSources } from "@/components/FlyLayer";
 
 export default function ProductCard({ p }: { p: Product }) {
   const { has, toggle } = useWishlist();
@@ -15,7 +16,14 @@ export default function ProductCard({ p }: { p: Product }) {
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          document.dispatchEvent(new CustomEvent("pawberry:fly", { detail: { kind: "wish", source: e.currentTarget as HTMLElement, emoji: p.emoji, image: p.image, name: p.name } }));
+          const el = e.currentTarget as HTMLElement;
+          if (wished) {
+            const icon = document.querySelector<HTMLElement>('[data-pawberry-fly="wish"]');
+            document.dispatchEvent(new CustomEvent("pawberry:fly", { detail: { kind: "wish", source: icon ?? el, emoji: p.emoji, name: p.name, target: wishSources.get(p.slug) ?? el } }));
+          } else {
+            wishSources.set(p.slug, el);
+            document.dispatchEvent(new CustomEvent("pawberry:fly", { detail: { kind: "wish", source: el, emoji: p.emoji, image: p.image, name: p.name } }));
+          }
           toggle(p.slug);
         }}
         aria-label="wishlist"
