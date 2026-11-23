@@ -21,6 +21,7 @@ export default function ChatWidget() {
   const [sending, setSending] = useState(false);
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const lastNotifiedRef = useRef<string>("");
 
   useEffect(() => {
     if (!open) return;
@@ -32,9 +33,32 @@ export default function ChatWidget() {
         const d = await r.json();
         const cs = d?.complaints || [];
         const latest = cs[0];
-        if (latest) setActiveComplaint(latest);
+        if (latest) {
+          setActiveComplaint(latest);
+          lastNotifiedRef.current = `${latest.id}:${latest.status}`;
+        }
       } catch {}
     })();
+    const t = setInterval(async () => {
+      try {
+        const r = await fetch("/api/support/complaints", { cache: "no-store" });
+        const d = await r.json();
+        const cs = d?.complaints || [];
+        const latest = cs[0];
+        if (latest) {
+          const key = `${latest.id}:${latest.status}`;
+          if (key !== lastNotifiedRef.current) {
+            lastNotifiedRef.current = key;
+            setActiveComplaint(latest);
+            setMessages((m) => [
+              ...m,
+              { id: "n" + chatSeq++, from: "bot" as const, text: `Update: your complaint ${latest.id} status is now ${latest.status}.`, complaintId: latest.id, status: latest.status },
+            ]);
+          }
+        }
+      } catch {}
+    }, 20000);
+    return () => clearInterval(t);
   }, [open]);
 
   useEffect(() => {
@@ -70,6 +94,34 @@ export default function ChatWidget() {
     setSending(false);
   }
 
+  async function lookupOrder() {
+    try {
+      const r = await fetch("/api/orders/mine", { cache: "no-store" });
+      const d = await r.json();
+      const rawOrders: { id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] }[] = (d?.orders || []) as { id: string; createdAt: string; status: string; total: number; items: { name: string; qty: number }[] }[];
+      const orders = rawOrders.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      if (!orders.length) {
+        setMessages((m) => [...m, { id: "b" + chatSeq++, from: "bot" as const, text: "I could not find any orders on your account yet. If you just placed one, give me a minute!" }]);
+        return;
+      }
+      const o = orders[0];
+      setMessages((m) => [
+        ...m,
+        { id: "b" + chatSeq++, from: "bot" as const, text: `Latest order: ${o.id} · ${o.status} · ₹${o.total} · Placed ${new Date(o.createdAt).toLocaleString()}. Items: ${o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}.` },
+      ]);
+    } catch {
+      setMessages((m) => [...m, { id: "b" + chatSeq++, from: "bot" as const, text: "Sorry, I could not look up your orders right now." }]);
+    }
+  }
+
+  async function handleQuick(q: { label: string; topic: string; message: string }) {
+    if (q.label === "Where is my order?") {
+      await lookupOrder();
+      return;
+    }
+    await send(q.message, q.topic);
+  }
+
   return (
     <>
       <button
@@ -96,7 +148,7 @@ export default function ChatWidget() {
           </div>
           <div className="p-2 border-t border-slate-100 flex flex-wrap gap-2">
             {QUICK_REPLIES.map((q) => (
-              <button key={q.label} onClick={() => send(q.message, q.topic)} className="px-3 py-1.5 rounded-full bg-berry/10 text-berry text-xs font-semibold hover:bg-berry/20 transition">
+              <button key={q.label} onClick={() => handleQuick(q)} className="px-3 py-1.5 rounded-full bg-berry/10 text-berry text-xs font-semibold hover:bg-berry/20 transition">
                 {q.label}
               </button>
             ))}
