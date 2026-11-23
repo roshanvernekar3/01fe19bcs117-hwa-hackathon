@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { playAddToCart, playWish } from "@/lib/sound";
 
 type FlyDetail = {
   kind: "cart" | "wish";
@@ -89,6 +90,8 @@ export default function FlyLayer() {
           setTimeout(() => t.classList.remove("pawberry-fly-pop"), 900);
         }
         setFlying(null);
+        if (detail.kind === "cart") playAddToCart();
+        else playWish();
         setToast({ id: Date.now(), message: detail.kind === "cart" ? "Added to Cart! 🛒" : "Added to Wishlist! ❤️", x: end.x, y: end.y });
         const tt = setTimeout(() => setToast(null), 1400);
         timersRef.current.push(tt);

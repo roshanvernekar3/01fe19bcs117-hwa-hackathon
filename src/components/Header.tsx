@@ -6,6 +6,7 @@ import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useState, useEffect } from "react";
 import ProfileMenu from "@/components/ProfileMenu";
+import SoundToggle from "@/components/SoundToggle";
 
 export default function Header() {
   const { count } = useCart();
@@ -40,6 +41,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
+          <SoundToggle />
           <ProfileMenu />
           <Link href="/wishlist" data-pawberry-fly="wish" className="relative inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition">
             <span className="text-xl">♡</span>
