@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Order } from "@/lib/orders";
 import PawLoader from "@/components/PawLoader";
+import AvatarViewer from "@/components/AvatarViewer";
 
 type Me = { user: { email: string; name: string; role: string; avatar?: string } | null; isAdmin: boolean };
 
@@ -20,6 +21,7 @@ export default function ProfilePage() {
   const [avatar, setAvatar] = useState<string>("");
   const [savingAvatar, setSavingAvatar] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState<string | null>(null);
+  const [viewerSrc, setViewerSrc] = useState<string | null>(null);
   const [addresses, setAddresses] = useState<
     { id: string; label: string; name: string; phone: string; address: string; city: string; zip: string; country: string; isDefault: boolean }[]
   >([]);
@@ -106,7 +108,12 @@ export default function ProfilePage() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Header card */}
       <div className="bg-white rounded-3xl p-6 border border-slate-100 mb-6 flex flex-col sm:flex-row items-center gap-5">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl flex-shrink-0 overflow-hidden">
+        <div
+          onClick={() => {
+            if (user.avatar && (user.avatar.startsWith("http") || user.avatar.startsWith("data:"))) setViewerSrc(user.avatar);
+          }}
+          className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl flex-shrink-0 overflow-hidden cursor-pointer"
+        >
           {user.avatar && (user.avatar.startsWith("http") ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : user.avatar)}
         </div>
         <div className="flex-1 text-center sm:text-left">
@@ -359,6 +366,7 @@ export default function ProfilePage() {
           </Link>
         </div>
       )}
+      {viewerSrc && <AvatarViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />}
     </div>
   );
 }

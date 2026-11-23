@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import AvatarViewer from "@/components/AvatarViewer";
 
 type Me = { user: { email: string; name: string; role: string; avatar?: string } | null; isAdmin: boolean };
 
 export default function ProfileMenu() {
   const [open, setOpen] = useState(false);
   const [me, setMe] = useState<Me | null>(null);
+  const [viewerSrc, setViewerSrc] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   async function load() {
@@ -47,7 +49,10 @@ export default function ProfileMenu() {
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          if (user?.avatar && (user.avatar.startsWith("http") || user.avatar.startsWith("data:"))) setViewerSrc(user.avatar);
+          else setOpen((o) => !o);
+        }}
         aria-label="profile"
         className="inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition"
       >
@@ -86,6 +91,7 @@ export default function ProfileMenu() {
           )}
         </div>
       )}
+      {viewerSrc && <AvatarViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />}
     </div>
   );
 }
