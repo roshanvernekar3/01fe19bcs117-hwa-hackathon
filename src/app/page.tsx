@@ -28,13 +28,15 @@ export default async function Home() {
         </div>
 
         {/* floating 3D elements */}
-        <div className="pointer-events-none absolute inset-0">
-          <span className="absolute top-24 left-[8%] text-5xl animate-float drop-shadow-lg">🐾</span>
-          <span className="absolute top-40 right-[12%] text-4xl animate-float-slow drop-shadow-lg">🎾</span>
-          <span className="absolute bottom-32 left-[18%] text-4xl animate-float-slow drop-shadow-lg">🦴</span>
+        <div className="pointer-events-none absolute inset-0" style={{ perspective: "900px" }}>
+          <span className="absolute top-24 left-[8%] text-5xl animate-toy-float drop-shadow-lg" style={{ transform: "translateZ(40px)" }}>🐾</span>
+          <span className="absolute top-40 right-[12%] text-4xl animate-toy-float drop-shadow-lg" style={{ animationDelay: "0.5s", transform: "translateZ(60px)" }}>🎾</span>
+          <span className="absolute bottom-32 left-[18%] text-4xl animate-float-slow drop-shadow-lg" style={{ transform: "translateZ(20px)" }}>🦴</span>
           <span className="absolute top-28 right-[30%] text-3xl animate-float drop-shadow-lg">✨</span>
-          <span className="absolute bottom-24 right-[8%] text-5xl animate-float drop-shadow-lg">🐱</span>
+          <span className="absolute bottom-24 right-[8%] text-5xl animate-float drop-shadow-lg" style={{ transform: "translateZ(50px)" }}>🐱</span>
           <span className="absolute top-1/2 left-[4%] text-3xl animate-float-slow drop-shadow-lg">❤️</span>
+          <span className="absolute top-16 left-[40%] text-3xl animate-toy-float drop-shadow-lg" style={{ animationDelay: "1.2s", transform: "translateZ(80px)" }}>🧶</span>
+          <span className="absolute bottom-16 right-[35%] text-3xl animate-toy-float drop-shadow-lg" style={{ animationDelay: "2s", transform: "translateZ(30px)" }}>🛏️</span>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid md:grid-cols-2 gap-12 items-center w-full">
@@ -72,12 +74,14 @@ export default async function Home() {
                 {/* soft platform */}
                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-72 h-20 bg-sage/50 rounded-[50%] blur-md" />
                 {/* dog */}
-                <div className="absolute bottom-16 left-6 text-[150px] md:text-[190px] animate-pet-bob drop-shadow-2xl select-none preserve-3d">
-                  <span className="inline-block animate-pet-sway">🐶</span>
+                <div className="absolute bottom-16 left-6 text-[150px] md:text-[190px] animate-pet-bob drop-shadow-2xl select-none preserve-3d" style={{ transformStyle: "preserve-3d" }}>
+                  <span className="inline-block animate-pet-sway animate-blink">🐶</span>
+                  <span className="absolute -right-2 bottom-4 text-3xl animate-tail-wag">🐾</span>
                 </div>
                 {/* cat */}
-                <div className="absolute bottom-20 right-6 text-[140px] md:text-[170px] animate-float drop-shadow-2xl select-none">
-                  <span className="inline-block animate-pet-sway" style={{ animationDelay: "0.8s" }}>🐱</span>
+                <div className="absolute bottom-20 right-6 text-[140px] md:text-[170px] animate-float drop-shadow-2xl select-none" style={{ transformStyle: "preserve-3d" }}>
+                  <span className="inline-block animate-pet-sway animate-blink" style={{ animationDelay: "0.8s" }}>🐱</span>
+                  <span className="absolute -right-4 bottom-6 text-3xl animate-tail-wag" style={{ animationDelay: "0.3s" }}>🐾</span>
                 </div>
                 {/* floating 3D bubbles */}
                 <div className="absolute top-8 left-1/3 w-20 h-20 rounded-full bg-white/60 backdrop-blur shadow-xl flex items-center justify-center text-3xl animate-float preserve-3d tilt-3d">🏠</div>
@@ -183,6 +187,11 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
             <div className="text-center mb-12">
+              <div className="flex justify-center gap-3 mb-4 text-2xl">
+                <span className="animate-paw-trail">🐾</span>
+                <span className="animate-paw-trail" style={{ animationDelay: "0.4s" }}>🐾</span>
+                <span className="animate-paw-trail" style={{ animationDelay: "0.8s" }}>🐾</span>
+              </div>
               <h2 className="text-3xl md:text-4xl font-extrabold text-navy">Why PAWBERRY?</h2>
               <p className="text-muted mt-2 max-w-2xl mx-auto">
                 We believe every pet deserves joy, comfort and a clean home — without breaking the bank. Our products are designed with love, tested by real pets, and built to last.

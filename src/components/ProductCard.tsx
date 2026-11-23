@@ -10,7 +10,7 @@ export default function ProductCard({ p }: { p: Product }) {
   const wished = has(p.slug);
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl transition hover-lift relative">
+    <div className="group bg-white rounded-2xl overflow-hidden border border-slate-100 tilt-card relative depth-shadow">
       <button
         onClick={(e) => {
           e.preventDefault();
@@ -23,8 +23,8 @@ export default function ProductCard({ p }: { p: Product }) {
         {wished ? "❤️" : "🤍"}
       </button>
       <Link href={`/products/${p.slug}`}>
-        <div className="relative h-48 bg-gradient-to-br from-cream to-blush overflow-hidden">
-          <Image src={p.image} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width:768px) 100vw, 25vw" />
+        <div className="relative h-48 bg-gradient-to-br from-cream to-blush overflow-hidden tilt-layer transition-transform duration-400">
+          <Image src={p.image} alt={p.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="(max-width:768px) 100vw, 25vw" />
           {p.badge && <span className="absolute top-3 left-3 text-xs font-semibold text-berry bg-white/90 backdrop-blur px-2 py-0.5 rounded-full shadow">{p.badge}</span>}
         </div>
         <div className="p-4">
