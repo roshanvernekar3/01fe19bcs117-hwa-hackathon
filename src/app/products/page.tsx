@@ -5,6 +5,7 @@ import { Suspense, useMemo, useState, useEffect } from "react";
 import type { Product, Category } from "@/lib/products";
 import { CATEGORIES } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
+import PawLoader from "@/components/PawLoader";
 
 function ProductsInner() {
   const params = useSearchParams();
@@ -53,7 +54,7 @@ function ProductsInner() {
           <h1 className="text-3xl md:text-4xl font-extrabold text-navy">
             {cat ? CATEGORIES.find((c) => c.slug === cat)?.name ?? "Products" : "All Products"}
           </h1>
-          <p className="text-slate-500 mt-1">{loading ? "Loading..." : `${filtered.length} products`}</p>
+          <p className="text-slate-500 mt-1">{loading ? "Sniffing out products…" : `${filtered.length} products`}</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <input
@@ -98,7 +99,7 @@ function ProductsInner() {
       </div>
 
       {loading ? (
-        <div className="text-center py-20 text-slate-500">Loading products...</div>
+        <PawLoader message="Fetching the goodies…" />
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-slate-500">No products found.</div>
       ) : (
@@ -114,7 +115,7 @@ function ProductsInner() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+    <Suspense fallback={<PawLoader />}>
       <ProductsInner />
     </Suspense>
   );

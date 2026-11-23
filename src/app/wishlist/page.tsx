@@ -7,6 +7,7 @@ import { useWishlist } from "@/lib/wishlist-context";
 import { useCart } from "@/lib/cart-context";
 import type { Product } from "@/lib/products";
 import Mascot from "@/components/Mascot";
+import PawLoader from "@/components/PawLoader";
 
 export default function WishlistPage() {
   const { items, remove, clear } = useWishlist();
@@ -25,7 +26,7 @@ export default function WishlistPage() {
     .filter(Boolean) as Product[];
 
   if (products.length === 0) {
-    return <div className="max-w-3xl mx-auto px-4 py-20 text-center text-slate-500">Loading...</div>;
+    return <PawLoader message="Loading your wishlist…" />;
   }
 
   if (wishedProducts.length === 0) {

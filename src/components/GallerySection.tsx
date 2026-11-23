@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Mascot from "@/components/Mascot";
+import PawLoader from "@/components/PawLoader";
 
 type Item = { url: string; name: string };
 
@@ -60,7 +61,7 @@ export default function GallerySection() {
         </div>
 
         {loading ? (
-          <div className="text-center text-muted">Loading...</div>
+          <PawLoader message="Loading gallery…" />
         ) : items.length === 0 ? (
           <div className="text-center py-8">
             <Mascot type="dog" size="lg" anim="peek" />

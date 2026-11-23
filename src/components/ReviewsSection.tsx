@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Mascot from "@/components/Mascot";
+import PawLoader from "@/components/PawLoader";
 
 type Review = { id: string; name: string; rating: number; text: string; createdAt: string };
 
@@ -62,7 +63,7 @@ export default function ReviewsSection() {
         </div>
 
         {loading ? (
-          <div className="text-center text-muted">Loading...</div>
+          <PawLoader message="Loading reviews…" />
         ) : reviews.length === 0 ? (
           <div className="text-center py-8">
             <Mascot type="cat" size="lg" anim="peek" />

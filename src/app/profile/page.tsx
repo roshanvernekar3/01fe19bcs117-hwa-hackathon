@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Order } from "@/lib/orders";
+import PawLoader from "@/components/PawLoader";
 
 type Me = { user: { email: string; name: string; role: string; avatar?: string } | null; isAdmin: boolean };
 
@@ -83,7 +84,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) return <div className="p-10 text-center text-slate-500">Loading...</div>;
+  if (loading) return <PawLoader message="Loading your profile…" />;
 
   if (!me?.user) {
     return (

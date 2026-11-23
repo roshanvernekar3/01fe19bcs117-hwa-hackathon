@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Order } from "@/lib/orders";
+import PawLoader from "@/components/PawLoader";
 
 function ConfirmationInner() {
   const params = useSearchParams();
@@ -53,7 +54,7 @@ function ConfirmationInner() {
 
 export default function OrderConfirmation() {
   return (
-    <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+    <Suspense fallback={<PawLoader />}>
       <ConfirmationInner />
     </Suspense>
   );

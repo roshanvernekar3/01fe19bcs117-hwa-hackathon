@@ -232,7 +232,7 @@ export default function PawPlayMatch() {
                 disabled={!canNext() || loadingProducts}
                 className="px-6 py-2.5 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition disabled:opacity-40 shadow-lg shadow-berry/20"
               >
-                {loadingProducts ? "Loading..." : step === 3 ? "See Matches" : "Next"}
+                {loadingProducts ? "🐾 Loading…" : step === 3 ? "See Matches" : "Next"}
               </button>
             </div>
           </div>

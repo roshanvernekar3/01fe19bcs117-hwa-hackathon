@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PawLoader from "@/components/PawLoader";
 import type { Order } from "@/lib/orders";
 
 const STEPS: { key: Order["status"]; label: string; emoji: string }[] = [
@@ -32,7 +33,7 @@ export default function OrderDetailPage() {
   }, [id]);
 
   if (loading) {
-    return <div className="max-w-2xl mx-auto px-4 py-20 text-center text-slate-500">Loading order...</div>;
+    return <PawLoader message="Loading your order…" />;
   }
 
   if (error || !order) {

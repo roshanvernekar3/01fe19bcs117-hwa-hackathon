@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Product } from "@/lib/products";
+import PawLoader from "@/components/PawLoader";
 
 type OrderStatus = "received" | "processing" | "shipped" | "delivered" | "cancelled";
 
@@ -95,7 +96,7 @@ export default function AdminDashboard() {
     await loadProducts();
   }
 
-  if (loading) return <div className="p-10 text-center text-slate-500">Loading...</div>;
+  if (loading) return <PawLoader message="Loading dashboard…" />;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

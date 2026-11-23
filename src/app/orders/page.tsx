@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Order } from "@/lib/orders";
+import PawLoader from "@/components/PawLoader";
 
 type Me = { user: { email: string; name: string; role: string } | null };
 
@@ -70,7 +71,7 @@ export default function OrdersPage() {
     }
   }
 
-  if (loading) return <div className="max-w-3xl mx-auto px-4 py-20 text-center text-slate-500">Loading...</div>;
+  if (loading) return <PawLoader message="Fetching your orders…" />;
 
   const loggedIn = !!me?.user;
 
