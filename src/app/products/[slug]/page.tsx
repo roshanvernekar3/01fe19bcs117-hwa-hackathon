@@ -1,133 +1,260 @@
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getCatalog } from "@/lib/products-store";
-import type { Product } from "@/lib/products";
+import { getCollection } from "@/lib/products";
+import { formatPrice } from "@/lib/format";
+import GarmentArt from "@/components/GarmentArt";
 import AddToCart from "@/components/AddToCart";
-import NotifyMe from "@/components/NotifyMe";
-import ProductImage from "@/components/ProductImage";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
+import Icon from "@/components/ui/Icon";
 
-export default async function ProductDetail({ params }: { params: Promise<{ slug: string }> }) {
+export const dynamic = "force-dynamic";
+
+type Props = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const h = await (await import("next/headers")).headers();
-  const host = h.get("host") || "localhost:3000";
-  const proto = h.get("x-forwarded-proto") || "https";
-  const res = await fetch(`${proto}://${host}/api/products`, { cache: "no-store" });
-  const catalog = res.ok ? ((await res.json()).products as Product[]) : await getCatalog();
+  const catalog = await getCatalog();
+  const product = catalog.find((p) => p.slug === slug);
+  if (!product) return { title: "Piece not found" };
+  return {
+    title: `${product.name} — ${formatPrice(product.price)}`,
+    description: product.tagline,
+  };
+}
+
+export default async function ProductDetail({ params }: Props) {
+  const { slug } = await params;
+  const catalog = await getCatalog();
   const product = catalog.find((p) => p.slug === slug);
   if (!product) notFound();
 
-  const related = catalog.filter((p) => p.category === product.category && p.slug !== slug).slice(0, 4);
+  const collection = product.collection ? getCollection(product.collection) : undefined;
+  const related = catalog
+    .filter((p) => p.slug !== slug)
+    .sort((a, b) => {
+      const sameA = a.category === product.category ? 1 : 0;
+      const sameB = b.category === product.category ? 1 : 0;
+      return sameB - sameA;
+    })
+    .slice(0, 4);
 
-  const isToy = product.category === "interactive-toys";
-  const stepsTitle = isToy ? "How to Play" : "How to Use";
-  const steps = isToy
-    ? [
-        { title: "Introduce", desc: "Place the toy near your pet and let them sniff and explore at their own pace.", emoji: "👃" },
-        { title: "Activate", desc: "Turn it on or hide a treat to spark curiosity and get them moving.", emoji: "⚡" },
-        { title: "Play together", desc: "Join the fun, praise and reward your pet for engaging.", emoji: "🎉" },
-      ]
-    : product.category === "pet-houses"
-    ? [
-        { title: "Set up", desc: "Assemble and place the house in a quiet, cozy corner of your home.", emoji: "🛠️" },
-        { title: "Add comfort", desc: "Line it with a soft blanket or cushion for extra warmth.", emoji: "🛏️" },
-        { title: "Invite", desc: "Encourage your pet with treats to explore and claim their new den.", emoji: "🐾" },
-      ]
-    : [
-        { title: "Prepare", desc: "Fill with your preferred litter and place in a well-ventilated spot.", emoji: "🧹" },
-        { title: "Introduce", desc: "Let your cat explore the station freely and get comfortable.", emoji: "🐱" },
-        { title: "Maintain", desc: "Scoop daily and refresh litter weekly to keep it fresh.", emoji: "✨" },
-      ];
+  const art = product.art ?? "jacket";
+  const inStock = product.inStock && (product.stock ?? 0) > 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <nav className="text-sm text-slate-500 mb-6">
-        <Link href="/" className="hover:text-berry">Home</Link> / <Link href="/products" className="hover:text-berry">Products</Link> / <span className="text-navy">{product.name}</span>
-      </nav>
+    <>
+      <div className="relative pt-28 sm:pt-32">
+        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[520px]">
+          <div className="absolute inset-0 grid-bg opacity-40" />
+          <div className="absolute left-1/2 top-0 h-[360px] w-[520px] -translate-x-1/2 rounded-full bg-violet/10 blur-[110px]" />
+        </div>
 
-      <div className="grid md:grid-cols-2 gap-10">
-        <ProductImage src={product.image} alt={product.name} />
+        <div className="container-x">
+          <nav className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-silver/35" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-chrome">Home</Link>
+            <span>/</span>
+            <Link href="/products" className="hover:text-chrome">Catalogue</Link>
+            <span>/</span>
+            <span className="text-silver/60">{product.name}</span>
+          </nav>
 
-        <div>
-          {product.badge && <span className="inline-block text-xs font-semibold text-berry bg-berry/10 px-3 py-1 rounded-full mb-3">{product.badge}</span>}
-          <h1 className="text-3xl md:text-4xl font-extrabold text-navy">{product.name}</h1>
-          <p className="text-slate-500 mt-2">{product.tagline}</p>
-          {!product.inStock && (
-            <span className="inline-block mt-3 text-xs font-bold text-red-600 bg-red-100 px-3 py-1 rounded-full">Out of Stock</span>
-          )}
-          <div className="mt-4 flex items-center gap-3">
-            <span className="text-3xl font-extrabold text-berry">₹{product.price}</span>
-            <span className="text-sm text-slate-400">★ {product.rating} ({product.reviews} reviews)</span>
-          </div>
-          {product.inStock ? (
-            <div className="mt-2 text-sm font-semibold text-slate-600">
-              {product.stock ? `In stock (${product.stock} available)` : "In stock"}
-            </div>
-          ) : (
-            <div className="mt-2 text-sm font-semibold text-red-600">Out of stock</div>
-          )}
-          <p className="mt-6 text-slate-700 leading-relaxed">{product.description}</p>
+          <div className="mt-8 grid gap-10 pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+            {/* Visual */}
+            <div className="lg:sticky lg:top-28 lg:self-start">
+              <div className="relative overflow-hidden rounded-3xl border border-white/[0.1] bg-[#0a090f]">
+                <div className="absolute inset-0 grid-bg-fine opacity-30" />
+                <div className="absolute -right-20 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-violet/15 blur-[80px]" />
+                <span className="absolute left-5 top-5 z-10 flex flex-col gap-2">
+                  {product.badge && (
+                    <span className="w-fit rounded-full border border-violet/35 bg-void/70 px-3 py-1 font-mono text-[8px] uppercase tracking-[0.16em] text-violet-bright backdrop-blur">
+                      {product.badge}
+                    </span>
+                  )}
+                  <span className="w-fit rounded-full border border-white/12 bg-void/60 px-3 py-1 font-mono text-[8px] uppercase tracking-[0.16em] text-silver/50 backdrop-blur">
+                    {collection?.name ?? product.category}
+                  </span>
+                </span>
+                <span className="absolute right-5 top-5 z-10 font-mono text-[9px] uppercase tracking-[0.18em] text-silver/30">
+                  {product.id.toUpperCase()}
+                </span>
 
-          <div className="mt-6">
-            <h3 className="font-semibold text-navy mb-2">Features</h3>
-            <ul className="grid grid-cols-2 gap-2 text-sm text-slate-700">
-              {product.features.map((f) => (
-                <li key={f} className="flex items-center gap-2"><span className="text-berry">✓</span>{f}</li>
-              ))}
-            </ul>
-          </div>
-
-          {/* How to Play / Use */}
-          <div className="mt-8">
-            <h3 className="font-semibold text-navy mb-3">{stepsTitle}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {steps.map((s, i) => (
-                <div key={s.title} className="bg-gradient-to-br from-cream to-blush rounded-2xl p-4 border border-white hover-lift h-full flex flex-col">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-7 h-7 rounded-full bg-berry text-white text-sm font-bold flex items-center justify-center">{i + 1}</span>
-                    <span className="text-2xl">{s.emoji}</span>
-                  </div>
-                  <div className="font-bold text-navy text-sm">{s.title}</div>
-                  <p className="text-slate-600 text-xs mt-1 leading-relaxed mt-auto pt-1">{s.desc}</p>
+                <div className="relative aspect-[4/5] w-full p-4 sm:p-6">
+                  <GarmentArt
+                    kind={art}
+                    label={product.name}
+                    slug={product.slug}
+                    variant="detail"
+                    showHud={false}
+                    className="h-full w-full"
+                  />
                 </div>
-              ))}
+
+                <div className="relative flex items-center justify-between border-t border-white/[0.08] px-5 py-3">
+                  <div className="flex items-center gap-2 font-mono text-[8px] uppercase tracking-[0.16em] text-silver/35">
+                    <span className="h-1 w-1 rounded-full bg-violet-bright animate-pulse-dot" />
+                    Holographic scan / 360°
+                  </div>
+                  <div className="flex gap-1.5">
+                    {["Front", "Detail", "Fibre"].map((tab, i) => (
+                      <span
+                        key={tab}
+                        className={`rounded-full border px-2.5 py-1 font-mono text-[7px] uppercase tracking-[0.14em] ${
+                          i === 0 ? "border-violet/40 bg-violet/10 text-violet-bright" : "border-white/10 text-silver/30"
+                        }`}
+                      >
+                        {tab}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* passport strip */}
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                {[
+                  { icon: "recycle" as const, label: "Recycled content", value: "100%" },
+                  { icon: "leaf" as const, label: "CO₂e avoided", value: `${product.carbon ?? 8.4} kg` },
+                  { icon: "shield" as const, label: "Repair cover", value: "Lifetime" },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+                    <Icon name={item.icon} size={14} className="text-violet-bright/80" />
+                    <p className="mt-2 text-xs font-medium text-chrome">{item.value}</p>
+                    <p className="mt-0.5 font-mono text-[7px] uppercase tracking-[0.14em] text-silver/30">
+                      {item.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="mt-8">
-            {product.inStock ? (
-              <AddToCart product={product} />
-            ) : (
-              <NotifyMe slug={product.slug} productName={product.name} />
-            )}
-          </div>
+            {/* Info */}
+            <div className="pt-1">
+              <div className="flex items-center justify-between gap-4">
+                <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-violet-bright/70">
+                  {collection ? `Collection ${collection.index} — ${collection.name}` : "REWEAR / System piece"}
+                </p>
+                <div className="flex items-center gap-1 font-mono text-[9px] text-silver/40">
+                  <Icon name="star" size={11} className="text-violet-bright" fill="currentColor" />
+                  {product.rating.toFixed(1)} <span className="text-silver/25">({product.reviews})</span>
+                </div>
+              </div>
 
-          <div className="mt-6 text-sm text-slate-500 space-y-1">
-            <div>🚚 Free shipping on orders over ₹1000</div>
-            <div>↩️ 30-day hassle-free returns</div>
-            <div>✅ In stock & ready to ship</div>
+              <h1 className="mt-3 text-[clamp(2.6rem,6vw,4.6rem)] font-medium leading-[0.92] tracking-[-0.045em] text-chrome">
+                {product.name}
+              </h1>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-silver/50 sm:text-base">
+                {product.tagline}
+              </p>
+
+              <div className="mt-6 flex items-end justify-between gap-4 border-y border-white/[0.08] py-5">
+                <div>
+                  <p className="text-2xl font-semibold tracking-tight text-chrome">{formatPrice(product.price)}</p>
+                  <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.14em] text-silver/30">
+                    Includes lifetime repair credit
+                  </p>
+                </div>
+                <span
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[8px] uppercase tracking-[0.14em] ${
+                    inStock
+                      ? "border-emerald-300/25 bg-emerald-400/[0.06] text-emerald-200/80"
+                      : "border-red-300/20 bg-red-400/[0.06] text-red-200/80"
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${inStock ? "bg-emerald-300/80" : "bg-red-300/80"}`} />
+                  {inStock ? "Available now" : "Sold out"}
+                </span>
+              </div>
+
+              <div className="mt-6">
+                <AddToCart product={product} />
+              </div>
+
+              <p className="mt-7 text-sm leading-relaxed text-silver/55">{product.description}</p>
+
+              <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {product.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2 text-xs text-silver/55">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-violet/30 text-violet-bright">
+                      <Icon name="check" size={10} />
+                    </span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-7 rounded-2xl border border-violet/20 bg-violet/[0.045] p-4">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 text-violet-bright">
+                    <Icon name="scan" size={18} />
+                  </span>
+                  <div>
+                    <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-violet-bright/80">
+                      Fibre passport
+                    </p>
+                    <p className="mt-1 text-sm text-chrome">{product.material ?? "Regenerated fibre system"}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-silver/45">
+                      Scan the woven tag inside your piece to see its origin, mill, dye process and
+                      end-of-life route. Return it to us and the fibre re-enters the next drop.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-7 divide-y divide-white/[0.08] border-y border-white/[0.08]">
+                {[
+                  {
+                    title: "Construction & fit",
+                    body: "Cut for movement with articulated panels and a modular hem. Unisex sizing; take your usual size for a clean fit or size up for a relaxed layer.",
+                  },
+                  {
+                    title: "Care & repair",
+                    body: "Cold wash, line dry, no fabric softener. Free repairs for life — book a repair from your account or contact the concierge. We cover the return label.",
+                  },
+                  {
+                    title: "Delivery & returns",
+                    body: "Carbon-neutral delivery in 2–4 working days. Free over ₹5,000. 30-day returns on unworn pieces; returns are re-spun or re-sold, never landfilled.",
+                  },
+                ].map((row) => (
+                  <details key={row.title} className="group py-4">
+                    <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-chrome">
+                      {row.title}
+                      <Icon name="plus" size={15} className="text-silver/35 transition-transform group-open:rotate-45" />
+                    </summary>
+                    <p className="mt-3 max-w-lg text-xs leading-relaxed text-silver/45">{row.body}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {related.length > 0 && (
-        <Reveal>
-          <section className="mt-20">
-            <h2 className="text-2xl font-extrabold text-navy mb-6">You may also like</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {related.map((p) => (
-                <div key={p.id} className="hover-lift h-full">
-                  <ProductCard p={p} />
-                </div>
-              ))}
+      {/* Related */}
+      <section className="border-t border-white/[0.07] py-20">
+        <div className="container-x">
+          <Reveal>
+            <div className="mb-10 flex items-end justify-between gap-4">
+              <div>
+                <p className="eyebrow mb-3">Continue the system</p>
+                <h2 className="text-3xl font-medium tracking-tight text-chrome sm:text-4xl">
+                  Pairs well with<span className="text-violet-bright">.</span>
+                </h2>
+              </div>
+              <Link href="/products" className="font-mono text-[9px] uppercase tracking-[0.16em] text-silver/40 hover:text-chrome">
+                View all →
+              </Link>
             </div>
-          </section>
-        </Reveal>
-      )}
-    </div>
+          </Reveal>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-5 lg:grid-cols-4 lg:gap-6">
+            {related.map((p, i) => (
+              <ProductCard key={p.slug} p={p} index={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

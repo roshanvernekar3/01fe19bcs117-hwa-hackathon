@@ -3,9 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Order } from "@/lib/orders";
-import PawLoader from "@/components/PawLoader";
+import { formatPrice } from "@/lib/format";
+import Loader from "@/components/Loader";
+import Icon from "@/components/ui/Icon";
 
 type Me = { user: { email: string; name: string; role: string } | null };
+
+const statusStyles: Record<string, string> = {
+  received: "border-violet/30 bg-violet/10 text-violet-bright",
+  processing: "border-violet/30 bg-violet/10 text-violet-bright",
+  shipped: "border-sky-300/25 bg-sky-400/[0.07] text-sky-200/80",
+  delivered: "border-emerald-300/25 bg-emerald-400/[0.07] text-emerald-200/80",
+  cancelled: "border-red-300/20 bg-red-400/[0.06] text-red-200/80",
+};
 
 export default function OrdersPage() {
   const [id, setId] = useState("");
@@ -71,111 +81,179 @@ export default function OrdersPage() {
     }
   }
 
-  if (loading) return <PawLoader message="Fetching your orders…" />;
+  if (loading) return <div className="pt-40"><Loader message="Fetching your orders…" /></div>;
 
   const loggedIn = !!me?.user;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-16">
-      <h1 className="text-3xl font-extrabold text-navy mb-2">My Orders</h1>
-      <p className="text-slate-500 mb-6">View the orders you have placed.</p>
-
-      {!loggedIn ? (
-        <div className="bg-white rounded-2xl p-8 border border-slate-100 text-center">
-          <div className="text-5xl mb-3">🔐</div>
-          <p className="text-slate-600 mb-5">Log in to see your orders, or track any order by its ID.</p>
-          <div className="flex gap-3 justify-center">
-            <Link href="/login" className="px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition">Log in</Link>
-            <Link href="/signup" className="px-6 py-3 rounded-full border border-slate-200 font-semibold hover:bg-slate-50">Sign up</Link>
-          </div>
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="text-center py-12 text-slate-500">
-          <div className="text-5xl mb-3">📦</div>
-          No orders yet. <Link href="/products" className="text-berry font-semibold hover:underline">Start shopping</Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {orders.map((o) => (
-            <div key={o.id} className="bg-white rounded-2xl p-5 border border-slate-100">
-              <div className="flex flex-wrap justify-between items-start gap-2">
-                <div>
-                  <Link href={`/orders/${encodeURIComponent(o.id)}`} className="font-bold text-navy hover:text-berry hover:underline">{o.id}</Link>
-                  <div className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString()}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-berry">₹{o.total}</div>
-                  <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
-                    o.status === "cancelled" ? "bg-red-100 text-red-600" :
-                    o.status === "delivered" ? "bg-green-100 text-green-600" :
-                    "bg-berry/10 text-berry"
-                  }`}>{o.status}</span>
-                </div>
-              </div>
-              <div className="mt-3 text-sm text-slate-700">
-                {o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}
-              </div>
-              <div className="mt-2 text-xs text-slate-500">
-                {o.customer.address}, {o.customer.city} {o.customer.zip}
-              </div>
-              <div className="mt-3 flex items-center gap-4">
-                <Link href={`/orders/${encodeURIComponent(o.id)}`} className="text-xs font-semibold text-berry hover:underline">View details →</Link>
-                {o.status !== "cancelled" && o.status !== "delivered" && o.status !== "shipped" && (
-                  <button
-                    onClick={() => cancelOrder(o.id)}
-                    disabled={cancelling === o.id}
-                    className="text-xs text-red-600 hover:underline disabled:opacity-50"
-                  >
-                    {cancelling === o.id ? "Cancelling..." : "Cancel order"}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-10 border-t border-slate-200 pt-6">
-        <button
-          onClick={() => setShowTrack((v) => !v)}
-          className="text-sm font-semibold text-berry hover:underline"
-        >
-          {showTrack ? "Hide order tracking" : "Track an order by ID →"}
-        </button>
-
-        {showTrack && (
-          <div className="mt-4">
-            <form onSubmit={lookup} className="flex gap-2">
-              <input
-                value={id}
-                onChange={(e) => setId(e.target.value)}
-                placeholder="PB-XXXX-XXXX"
-                className="flex-1 px-4 py-2 rounded-full border border-slate-200 focus:outline-none focus:border-berry"
-              />
-              <button type="submit" className="px-6 py-2 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition" disabled={trackLoading}>
-                {trackLoading ? "..." : "Track"}
-              </button>
-            </form>
-
-            {notFound && <div className="mt-4 text-red-500 text-sm">Order not found. Please check your ID.</div>}
-
-            {tracked && (
-              <div className="mt-4 bg-white rounded-2xl p-6 border border-slate-100">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="font-bold text-navy">{tracked.id}</div>
-                  <span className="px-3 py-1 rounded-full bg-berry/10 text-berry text-xs font-semibold capitalize">{tracked.status}</span>
-                </div>
-                <Link href={`/orders/${encodeURIComponent(tracked.id)}`} className="text-sm font-semibold text-berry hover:underline">
-                  View full details →
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
+    <div className="relative pt-28 sm:pt-32">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72">
+        <div className="absolute inset-0 grid-bg opacity-40" />
       </div>
 
-      <div className="mt-8 text-center">
-        <Link href="/products" className="text-berry font-semibold hover:underline">Continue shopping →</Link>
+      <div className="container-x max-w-4xl pb-20">
+        <div className="border-b border-white/[0.08] pb-6">
+          <p className="eyebrow mb-3">Orders / loop status</p>
+          <h1 className="text-[clamp(2.6rem,7vw,5rem)] font-medium leading-none tracking-[-0.05em] text-chrome">
+            Track <span className="text-gradient">everything.</span>
+          </h1>
+          <p className="mt-3 max-w-lg text-sm text-silver/45">
+            Every piece you order stays traceable — from dispatch to repair to re-spin.
+          </p>
+        </div>
+
+        {!loggedIn ? (
+          <div className="mt-10 rounded-2xl border border-white/[0.09] bg-white/[0.02] p-8 text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/12 text-silver/40">
+              <Icon name="user" size={22} />
+            </span>
+            <p className="mt-4 text-sm text-silver/55">
+              Log in to see your full order history, or track any order by its ID below.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Link href="/login" className="btn btn-primary btn-sm">
+                Log in
+              </Link>
+              <Link href="/signup" className="btn btn-ghost btn-sm">
+                Create account
+              </Link>
+            </div>
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="mt-10 rounded-2xl border border-dashed border-white/12 px-6 py-16 text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/12 text-silver/40">
+              <Icon name="bag" size={22} />
+            </span>
+            <p className="mt-4 text-sm text-silver/50">No orders yet.</p>
+            <Link href="/products" className="btn btn-primary btn-sm mt-5">
+              Explore Drop 01 <Icon name="arrow-right" size={13} />
+            </Link>
+          </div>
+        ) : (
+          <div className="mt-8 space-y-3">
+            {orders.map((o) => (
+              <div
+                key={o.id}
+                className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5 transition-colors hover:border-violet/25"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <Link
+                      href={`/orders/${encodeURIComponent(o.id)}`}
+                      className="font-mono text-xs uppercase tracking-[0.12em] text-chrome hover:text-violet-bright"
+                    >
+                      {o.id}
+                    </Link>
+                    <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.14em] text-silver/30">
+                      {new Date(o.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-chrome">{formatPrice(o.total)}</span>
+                    <span
+                      className={`rounded-full border px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.12em] ${
+                        statusStyles[o.status] ?? statusStyles.received
+                      }`}
+                    >
+                      {o.status}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-xs text-silver/50">
+                  {o.items.map((i) => `${i.name} ×${i.qty}`).join(" · ")}
+                </p>
+                <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.14em] text-silver/25">
+                  {o.customer.address}, {o.customer.city} {o.customer.zip}
+                </p>
+
+                <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-white/[0.06] pt-3">
+                  <Link
+                    href={`/orders/${encodeURIComponent(o.id)}`}
+                    className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-violet-bright hover:text-chrome"
+                  >
+                    View details <Icon name="arrow-right" size={12} />
+                  </Link>
+                  {o.status !== "cancelled" && o.status !== "delivered" && o.status !== "shipped" && (
+                    <button
+                      onClick={() => cancelOrder(o.id)}
+                      disabled={cancelling === o.id}
+                      className="font-mono text-[9px] uppercase tracking-[0.14em] text-silver/30 hover:text-red-300 disabled:opacity-50"
+                    >
+                      {cancelling === o.id ? "Cancelling…" : "Cancel order"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-10 border-t border-white/[0.08] pt-6">
+          <button
+            onClick={() => setShowTrack((v) => !v)}
+            className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-silver/45 hover:text-chrome"
+          >
+            <Icon name="search" size={13} />
+            {showTrack ? "Hide order tracking" : "Track an order by ID"}
+          </button>
+
+          {showTrack && (
+            <div className="mt-4">
+              <form onSubmit={lookup} className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  value={id}
+                  onChange={(e) => setId(e.target.value)}
+                  placeholder="RW-XXXX-XXXX"
+                  className="field flex-1"
+                  aria-label="Order ID"
+                />
+                <button type="submit" className="btn btn-primary btn-sm shrink-0" disabled={trackLoading}>
+                  {trackLoading ? "Tracking…" : "Track"}
+                </button>
+              </form>
+
+              {notFound && (
+                <div className="mt-4 rounded-xl border border-red-400/25 bg-red-500/[0.07] px-4 py-3 text-xs text-red-200">
+                  Order not found. Please check your ID.
+                </div>
+              )}
+
+              {tracked && (
+                <div className="mt-4 rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-mono text-xs uppercase tracking-[0.12em] text-chrome">{tracked.id}</p>
+                    <span
+                      className={`rounded-full border px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.12em] ${
+                        statusStyles[tracked.status] ?? statusStyles.received
+                      }`}
+                    >
+                      {tracked.status}
+                    </span>
+                  </div>
+                  <Link
+                    href={`/orders/${encodeURIComponent(tracked.id)}`}
+                    className="mt-3 inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-violet-bright hover:text-chrome"
+                  >
+                    View full details <Icon name="arrow-right" size={12} />
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+          <Link
+            href="/products"
+            className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-silver/40 hover:text-chrome"
+          >
+            <Icon name="arrow-right" size={12} className="rotate-180" /> Continue exploring
+          </Link>
+          <Link href="/support" className="font-mono text-[9px] uppercase tracking-[0.16em] text-silver/40 hover:text-chrome">
+            Need help? Contact support
+          </Link>
+        </div>
       </div>
     </div>
   );

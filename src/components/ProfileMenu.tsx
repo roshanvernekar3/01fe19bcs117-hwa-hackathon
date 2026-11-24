@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import AvatarViewer from "@/components/AvatarViewer";
+import Icon from "@/components/ui/Icon";
 
 type Me = { user: { email: string; name: string; role: string; avatar?: string } | null; isAdmin: boolean };
 
@@ -12,6 +13,7 @@ export default function ProfileMenu() {
   const [me, setMe] = useState<Me | null>(null);
   const [viewerSrc, setViewerSrc] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   async function load() {
     try {
@@ -22,10 +24,10 @@ export default function ProfileMenu() {
     }
   }
 
-  const pathname = usePathname();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   useEffect(() => {
@@ -50,41 +52,95 @@ export default function ProfileMenu() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label="profile"
-        className="inline-flex items-center gap-1 px-3 py-2 rounded-full hover:bg-slate-100 transition"
+        aria-label="Account"
+        aria-expanded={open}
+        className="icon-btn"
       >
-        <span className="w-7 h-7 inline-flex items-center justify-center text-xl overflow-hidden rounded-full">
-          {user?.avatar && (user.avatar.startsWith("http") || user.avatar.startsWith("data:")) ? (
-            <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-          ) : (
-            user ? (user.avatar || "👤") : "👤"
-          )}
-        </span>
+        {user?.avatar && (user.avatar.startsWith("http") || user.avatar.startsWith("data:")) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={user.avatar} alt="" className="h-5 w-5 rounded-full object-cover" />
+        ) : (
+          <Icon name="user" size={19} />
+        )}
       </button>
+
       {open && (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">
+        <div className="glass-strong absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl p-2 shadow-2xl shadow-black/60">
           {user ? (
             <>
-              <Link href="/profile" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-slate-50">My Profile</Link>
-              <Link href="/orders" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-slate-50">My Orders</Link>
-              <Link href="/wishlist" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-slate-50">Wishlist</Link>
-              {isAdmin && (
-                <Link href="/admin" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm font-semibold text-berry hover:bg-slate-50">Admin Dashboard</Link>
-              )}
-              <button onClick={logout} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-red-600">Logout</button>
+              <div className="border-b border-white/[0.08] px-3 pb-3 pt-2">
+                <p className="truncate text-sm font-medium text-chrome">{user.name}</p>
+                <p className="truncate font-mono text-[10px] text-silver/45">{user.email}</p>
+              </div>
+              <div className="py-1">
+                <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
+                <MenuLink href="/orders" onClick={() => setOpen(false)}>Orders</MenuLink>
+                <MenuLink href="/wishlist" onClick={() => setOpen(false)}>Wishlist</MenuLink>
+                {isAdmin && (
+                  <MenuLink href="/admin" onClick={() => setOpen(false)} accent>Ops console</MenuLink>
+                )}
+              </div>
+              <button
+                onClick={logout}
+                className="w-full rounded-xl px-3 py-2 text-left text-sm text-red-300/80 hover:bg-red-500/10 hover:text-red-200"
+              >
+                Log out
+              </button>
             </>
           ) : (
-            <>
-              <Link href="/login" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-slate-50">Login</Link>
-              <Link href="/signup" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-slate-50">Sign Up</Link>
+            <div className="p-2">
+              <p className="px-1 pb-3 font-mono text-[9px] uppercase tracking-[0.2em] text-silver/40">
+                Access the system
+              </p>
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="btn btn-primary btn-sm mb-2 w-full"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setOpen(false)}
+                className="btn btn-ghost btn-sm w-full"
+              >
+                Create account
+              </Link>
               {isAdmin && (
-                <Link href="/admin" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm font-semibold text-berry hover:bg-slate-50">Admin Dashboard</Link>
+                <MenuLink href="/admin" onClick={() => setOpen(false)} accent>
+                  Ops console
+                </MenuLink>
               )}
-            </>
+            </div>
           )}
         </div>
       )}
+
       {viewerSrc && <AvatarViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />}
     </div>
+  );
+}
+
+function MenuLink({
+  href,
+  onClick,
+  children,
+  accent,
+}: {
+  href: string;
+  onClick: () => void;
+  children: React.ReactNode;
+  accent?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`block rounded-xl px-3 py-2 text-sm hover:bg-white/[0.06] ${
+        accent ? "text-violet-bright" : "text-silver/70 hover:text-chrome"
+      }`}
+    >
+      {children}
+    </Link>
   );
 }

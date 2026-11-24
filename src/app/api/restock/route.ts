@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get("slug");
   if (!slug) return NextResponse.json({ error: "slug required" }, { status: 400 });
   const cookie = req.cookies.get("pb_admin")?.value;
-  const expected = process.env.ADMIN_PASSWORD || "pawberry-admin";
+  const expected = process.env.ADMIN_PASSWORD || "rewear-admin";
   if (cookie !== expected) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const subscribers = await getSubscribers(slug);
   return NextResponse.json({ slug, subscribers, count: subscribers.length });

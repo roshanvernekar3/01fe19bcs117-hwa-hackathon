@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/users";
 
 function adminToken() {
-  return process.env.ADMIN_PASSWORD || "pawberry-admin";
+  return process.env.ADMIN_PASSWORD || "rewear-admin";
 }
 
 export async function GET(req: NextRequest) {
@@ -14,5 +14,5 @@ export async function GET(req: NextRequest) {
   const adminCookie = req.cookies.get("pb_admin")?.value;
   const isAdmin = adminCookie === adminToken() || user?.role === "admin";
   if (!user) return NextResponse.json({ user: null, isAdmin });
-  return NextResponse.json({ user: { email: user.email, name: user.name, role: user.role, avatar: user.avatar || "🐾" }, isAdmin });
+  return NextResponse.json({ user: { email: user.email, name: user.name, role: user.role, avatar: user.avatar || "◈" }, isAdmin });
 }

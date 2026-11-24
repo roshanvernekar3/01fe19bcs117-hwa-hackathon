@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         : contentType.includes("gif")
           ? "gif"
           : "jpg";
-    const safe = (name || "paw").toString().replace(/[^a-z0-9]/gi, "").slice(0, 40) || "paw";
+    const safe = (name || "rewear").toString().replace(/[^a-z0-9]/gi, "").slice(0, 40) || "rewear";
     const filename = `gallery/${Date.now()}-${safe}.${ext}`;
     const blob = await put(filename, buffer, { access: "public", contentType, addRandomSuffix: false });
     return NextResponse.json({ url: blob.url }, { status: 201 });

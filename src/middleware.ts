@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 function token() {
-  return process.env.ADMIN_PASSWORD || "pawberry-admin";
+  return process.env.ADMIN_PASSWORD || "rewear-admin";
 }
 
 export function middleware(req: NextRequest) {

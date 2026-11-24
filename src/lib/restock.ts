@@ -53,7 +53,7 @@ export async function clearSubscribers(slug: string) {
 export async function sendRestockEmail(to: string, product: { name: string; slug: string; price: number }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return { sent: false, reason: "RESEND_API_KEY not configured" };
-  const from = process.env.RESEND_FROM || "PAWBERRY <onboarding@resend.dev>";
+  const from = process.env.RESEND_FROM || "REWEAR <onboarding@resend.dev>";
   const site = process.env.NEXT_PUBLIC_SITE_URL || "https://01fe19bcs117-hwa-hackathon.vercel.app";
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -62,7 +62,7 @@ export async function sendRestockEmail(to: string, product: { name: string; slug
       body: JSON.stringify({
         from,
         to: [to],
-        subject: `${product.name} is back in stock at PAWBERRY! 🐾`,
+        subject: `${product.name} is back in stock at REWEAR`,
         html: `<div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;background:#fdf8f3;border-radius:16px">
           <h1 style="color:#2f3e46">Great news! 🎉</h1>
           <p style="color:#6b7a7a"><strong>${product.name}</strong> is back in stock.</p>

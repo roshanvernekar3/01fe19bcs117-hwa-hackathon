@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import type { Product } from "@/lib/products";
 
 type WishlistContextType = {
   items: string[];
@@ -14,22 +13,27 @@ type WishlistContextType = {
 
 const WishlistContext = createContext<WishlistContextType | null>(null);
 
+const STORAGE_KEY = "rewear-wishlist-v1";
+
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("pawberry-wishlist");
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (raw) setItems(JSON.parse(raw) as string[]);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (Array.isArray(parsed)) setItems(parsed.filter((s) => typeof s === "string"));
+      }
     } catch {}
-      setHydrated(true);
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    localStorage.setItem("pawberry-wishlist", JSON.stringify(items));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, hydrated]);
 
   const has = (slug: string) => items.includes(slug);
@@ -50,5 +54,3 @@ export function useWishlist() {
   if (!ctx) throw new Error("useWishlist must be used within WishlistProvider");
   return ctx;
 }
-
-export type { Product };

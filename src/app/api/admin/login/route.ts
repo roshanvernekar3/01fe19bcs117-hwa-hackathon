@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 
 function token() {
-  return process.env.ADMIN_PASSWORD || "pawberry-admin";
+  return process.env.ADMIN_PASSWORD || "rewear-admin";
 }
 
 export async function POST(req: NextRequest) {

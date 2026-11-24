@@ -35,7 +35,7 @@ export type Order = {
 };
 
 function genId() {
-  return "PB-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
+  return "RW-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
 // Orders are written as immutable, uniquely named version files. Object storage

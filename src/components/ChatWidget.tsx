@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Icon from "@/components/ui/Icon";
 
 type ChatMsg = {
   id: string;
@@ -20,10 +21,10 @@ type Pending =
   | null;
 
 const QUICK_REPLIES = [
-  { label: "Where is my order?", action: "orders" },
-  { label: "Cancel my order", action: "cancel" },
-  { label: "Request a return", action: "return" },
-  { label: "Talk to support", action: "support" },
+  { label: "Track my order", action: "orders" },
+  { label: "Cancel an order", action: "cancel" },
+  { label: "Start a return", action: "return" },
+  { label: "Ask the concierge", action: "support" },
 ] as const;
 
 let seq = 1;
@@ -32,12 +33,12 @@ const nid = (p: string) => `${p}${seq++}`;
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMsg[]>([
-    { id: "g1", from: "bot", text: "Hi! I'm PawBot 🐾 Tell me what you need, or pick a quick option below." },
+    { id: "g1", from: "bot", text: "Welcome to REWEAR. I'm the concierge — ask about orders, repairs, returns or fit." },
   ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
-  const [flow, setFlow] = useState<{ kind: FlowKind } | null>(null);
+  const [, setFlow] = useState<{ kind: FlowKind } | null>(null);
   const [pending, setPending] = useState<Pending>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const lastNotified = useRef("");
@@ -82,7 +83,7 @@ export default function ChatWidget() {
         }
         if (key !== lastNotified.current) {
           lastNotified.current = key;
-          pushBot(`Update: complaint ${latest.id} is now "${latest.status}".`, latest.id, latest.status);
+          pushBot(`Update: request ${latest.id} is now "${latest.status}".`, latest.id, latest.status);
         }
       } catch {}
     }
@@ -120,7 +121,7 @@ export default function ChatWidget() {
       const d = await r.json();
       if (r.ok && d?.complaint) {
         if (userMsgId) markSent(userMsgId);
-        pushBot(`Complaint ${d.complaint.id} filed with status "${d.complaint.status}". Our team will review it shortly.`, d.complaint.id, d.complaint.status);
+        pushBot(`Request ${d.complaint.id} logged with status "${d.complaint.status}". The REWEAR team will review it shortly.`, d.complaint.id, d.complaint.status);
         setFlow(null);
         setPending(null);
       } else {
@@ -201,11 +202,7 @@ export default function ChatWidget() {
     pushUser(text);
     setFlow(null);
     setPending({ kind: "support", issue: text });
-    pushBot(
-      flow?.kind === "support"
-        ? "Got it. Should I raise a support ticket with this message?"
-        : "Should I raise a support ticket with this message?"
-    );
+    pushBot("Got it. Should I log this with the REWEAR support team?");
   }
 
   function handleQuick(label: string, action: (typeof QUICK_REPLIES)[number]["action"]) {
@@ -214,7 +211,7 @@ export default function ChatWidget() {
     if (action === "orders") void showOrderStatus();
     else if (action === "support") {
       setFlow({ kind: "support" });
-      pushBot("Sure — tell me briefly what happened and I'll raise a support ticket.");
+      pushBot("Tell me briefly what happened and I'll log it with the support team.");
     } else {
       void startOrderFlow(action);
     }
@@ -224,60 +221,89 @@ export default function ChatWidget() {
     <>
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close support chat" : "Open support chat"}
-        className="fixed bottom-6 right-6 z-[10000] w-14 h-14 rounded-full bg-berry text-white shadow-lg flex items-center justify-center text-2xl hover:scale-110 transition"
+        aria-label={open ? "Close concierge" : "Open concierge"}
+        className="fixed bottom-5 right-5 z-[90] flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-carbon/90 text-chrome shadow-2xl shadow-black/50 backdrop-blur-xl transition-transform duration-300 hover:scale-105 hover:border-violet/50 sm:bottom-6 sm:right-6"
       >
-        {open ? "✕" : "💬"}
+        {open ? (
+          <Icon name="close" size={19} />
+        ) : (
+          <span className="relative flex h-5 w-5 items-center justify-center">
+            <Icon name="sparkle" size={19} className="text-violet-bright" />
+            <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-violet-bright animate-pulse-dot" />
+          </span>
+        )}
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-4 z-[10000] w-[92vw] max-w-sm h-[70vh] max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
-          <div className="bg-berry text-white p-3 flex items-center justify-between">
-            <div className="font-bold text-sm">Paw Support 🐾</div>
-            <button onClick={() => setOpen(false)} aria-label="Close chat" className="text-white text-lg leading-none">✕</button>
+        <div className="fixed bottom-20 right-4 z-[90] flex h-[68vh] max-h-[620px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-white/12 bg-carbon/95 shadow-2xl shadow-black/70 backdrop-blur-2xl sm:bottom-24 sm:right-6">
+          <div className="flex items-center justify-between border-b border-white/[0.08] p-4">
+            <div>
+              <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-silver/40">Always on</p>
+              <p className="mt-0.5 text-sm font-semibold text-chrome">REWEAR Concierge</p>
+            </div>
+            <div className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.14em] text-silver/35">
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-bright animate-pulse-dot" />
+              Live
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 bg-slate-50">
+          <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto bg-white/[0.015] p-3">
             {messages.map((m) => (
               <div
                 key={m.id}
-                className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm ${
+                className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
                   m.from === "user"
-                    ? "bg-berry text-white rounded-br-sm self-end"
-                    : "bg-white border border-slate-100 text-navy rounded-bl-sm self-start"
+                    ? "self-end rounded-br-sm bg-violet text-void"
+                    : "self-start rounded-bl-sm border border-white/[0.08] bg-white/[0.035] text-silver/80"
                 }`}
               >
                 {m.text}
                 {m.from === "user" && m.tick === "sent" && (
-                  <span className="ml-1 text-[11px] text-white/70">✓</span>
+                  <span className="ml-1 text-[11px] text-void/60">✓</span>
                 )}
                 {m.complaintId && (
-                  <div className="text-[10px] mt-1 opacity-70">Ticket {m.complaintId} · {m.status}</div>
+                  <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] opacity-60">
+                    {m.complaintId} · {m.status}
+                  </div>
                 )}
               </div>
             ))}
             {typing && (
-              <div className="max-w-[85%] px-3 py-2 rounded-2xl bg-white border border-slate-100 rounded-bl-sm self-start flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-slate-400 animate-chat-typing" />
-                <span className="w-2 h-2 rounded-full bg-slate-400 animate-chat-typing" style={{ animationDelay: "0.15s" }} />
-                <span className="w-2 h-2 rounded-full bg-slate-400 animate-chat-typing" style={{ animationDelay: "0.3s" }} />
+              <div className="flex max-w-[86%] items-center gap-1 self-start rounded-2xl rounded-bl-sm border border-white/[0.08] bg-white/[0.035] px-3 py-3">
+                {[0, 1, 2].map((n) => (
+                  <span
+                    key={n}
+                    className="h-1.5 w-1.5 animate-chat-typing rounded-full bg-violet-bright/60"
+                    style={{ animationDelay: `${n * 0.15}s` }}
+                  />
+                ))}
               </div>
             )}
             <div ref={endRef} />
           </div>
 
-          <div className="p-2 border-t border-slate-100 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 border-t border-white/[0.08] p-2.5">
             {pending ? (
               <>
-                <button onClick={() => confirmPending("yes")} className="px-3 py-1.5 rounded-full bg-berry text-white text-xs font-semibold hover:bg-berry-dark transition">Yes, submit</button>
-                <button onClick={() => confirmPending("no")} className="px-3 py-1.5 rounded-full bg-slate-200 text-navy text-xs font-semibold hover:bg-slate-300 transition">No, cancel</button>
+                <button
+                  onClick={() => confirmPending("yes")}
+                  className="rounded-full bg-violet px-3 py-1.5 text-[11px] font-semibold text-void transition hover:bg-violet-bright"
+                >
+                  Yes, submit
+                </button>
+                <button
+                  onClick={() => confirmPending("no")}
+                  className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-semibold text-silver/70 transition hover:bg-white/5"
+                >
+                  No, cancel
+                </button>
               </>
             ) : (
               QUICK_REPLIES.map((q) => (
                 <button
                   key={q.label}
                   onClick={() => handleQuick(q.label, q.action)}
-                  className="px-3 py-1.5 rounded-full bg-berry/10 text-berry text-xs font-semibold hover:bg-berry/20 transition"
+                  className="rounded-full border border-white/10 bg-violet/[0.08] px-2.5 py-1.5 text-[10px] font-medium text-violet-bright transition hover:border-violet/40 hover:bg-violet/15"
                 >
                   {q.label}
                 </button>
@@ -285,20 +311,21 @@ export default function ChatWidget() {
             )}
           </div>
 
-          <div className="p-3 border-t border-slate-100 flex gap-2">
+          <div className="flex gap-2 border-t border-white/[0.08] p-3">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") void handleSend(input);
               }}
-              placeholder={pending ? "Tap Yes or No above, or type it…" : "Describe your issue…"}
-              className="flex-1 px-3 py-2 rounded-full border border-slate-200 text-sm focus:outline-none focus:border-berry"
+              placeholder={pending ? "Tap Yes or No above…" : "Ask about orders, repairs, fit…"}
+              className="field py-2 text-xs"
+              aria-label="Message"
             />
             <button
               onClick={() => void handleSend(input)}
               disabled={busy}
-              className="px-4 py-2 rounded-full bg-berry text-white text-sm font-semibold hover:bg-berry-dark transition disabled:opacity-60"
+              className="shrink-0 rounded-full bg-violet px-4 py-2 text-xs font-semibold text-void transition hover:bg-violet-bright disabled:opacity-50"
             >
               Send
             </button>

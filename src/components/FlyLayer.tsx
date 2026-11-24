@@ -1,121 +1,53 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { playAddToCart, playWish } from "@/lib/sound";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Icon from "@/components/ui/Icon";
 
-export type FlyDetail = {
-  kind: "cart" | "wish";
-  source: HTMLElement;
-  emoji: string;
-  image?: string;
-  name?: string;
-  target?: HTMLElement | null;
-};
-
-type FlyRect = { x: number; y: number; w: number; h: number };
-
-type Flying = {
-  id: number;
-  emoji: string;
-  from: FlyRect;
-  to: FlyRect;
-};
-
-type FlyToast = { id: number; message: string; x: number; y: number };
-
-const FLY_W = 40;
-const FLY_H = 40;
-const FLY_MS = 620;
-
-let flySeq = 0;
-export const wishSources = new Map<string, HTMLElement>();
+type Toast = { id: number; name: string };
 
 export default function FlyLayer() {
-  const [flying, setFlying] = useState<Flying | null>(null);
-  const [toast, setToast] = useState<FlyToast | null>(null);
-  const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+  const [toast, setToast] = useState<Toast | null>(null);
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<FlyDetail>).detail;
-      const src = detail.source;
-      const r = src.getBoundingClientRect();
-      const target =
-        detail.target ??
-        (document.querySelector<HTMLElement>(detail.kind === "cart" ? '[data-paw-fly-target="nav-cart"]' : '[data-paw-fly-target="nav-wishlist"]') as HTMLElement | null);
-      const endR = target ? target.getBoundingClientRect() : null;
-      const endRect: FlyRect = endR
-        ? { x: endR.x, y: endR.y, w: endR.width, h: endR.height }
-        : { x: window.innerWidth - 80, y: 64, w: FLY_W, h: FLY_H };
-      setFlying({ id: ++flySeq, emoji: detail.emoji, from: { x: r.x, y: r.y, w: r.width, h: r.height }, to: { x: endRect.x, y: endRect.y, w: endRect.w, h: endRect.h } });
-      const t = setTimeout(() => {
-        setFlying(null);
-        if (detail.kind === "cart") playAddToCart();
-        else playWish();
-        setToast({ id: Date.now(), message: detail.kind === "cart" ? "Added to Cart! 🛒" : "Added to Wishlist! ❤️", x: endRect.x, y: endRect.y });
-        const tt = setTimeout(() => setToast(null), 1400);
-        timersRef.current.push(tt);
-        const icon = detail.target ?? document.querySelector<HTMLElement>(detail.kind === "cart" ? '[data-paw-fly-target="nav-cart"]' : '[data-paw-fly-target="nav-wishlist"]');
-        if (icon) icon.classList.add("pawberry-fly-pop");
-        setTimeout(() => icon?.classList.remove("pawberry-fly-pop"), 900);
-      }, FLY_MS);
-      timersRef.current.push(t);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onAdd = (e: Event) => {
+      const detail = (e as CustomEvent<{ name?: string }>).detail;
+      setToast({ id: Date.now(), name: detail?.name || "Piece" });
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setToast(null), 3200);
     };
-    document.addEventListener("pawberry:fly", handler);
-    const timers = timersRef.current;
+    document.addEventListener("rewear:cart-add", onAdd);
     return () => {
-      document.removeEventListener("pawberry:fly", handler);
-      timers.forEach((t) => clearTimeout(t));
+      document.removeEventListener("rewear:cart-add", onAdd);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
-  if (!flying) return null;
-  const sx = flying.from.x + flying.from.w / 2 - FLY_W / 2;
-  const sy = flying.from.y + flying.from.h / 2 - FLY_H / 2;
-  const tx = flying.to.x + flying.to.w / 2 - FLY_W / 2;
-  const ty = flying.to.y + flying.to.h / 2 - FLY_H / 2;
+  if (!toast) return null;
+
   return (
-    <>
-      <div
-        key={flying.id}
-        className="pawberry-fly"
-        style={
-          {
-            position: "fixed",
-            left: sx,
-            top: sy,
-            width: FLY_W,
-            height: FLY_H,
-            pointerEvents: "none",
-            zIndex: 9997,
-            animation: "pawberry-fly-anim 0.55s cubic-bezier(0.22,0.61,0.36,1) forwards",
-            "--paw-fly-dx": `${tx - sx}px`,
-            "--paw-fly-dy": `${ty - sy}px`,
-          } as CSSProperties
-        }
-      >
-        <div
-          className="pawberry-fly-thumb"
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(255,255,255,0.95)",
-            borderRadius: "999px",
-            boxShadow: "0 12px 32px rgba(47,62,70,0.18)",
-            backdropFilter: "blur(6px)",
-          }}
+    <div
+      key={toast.id}
+      className="fixed bottom-5 left-1/2 z-[80] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 animate-rise sm:bottom-7 sm:left-7 sm:translate-x-0"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="glass-strong flex items-center gap-3 rounded-2xl p-3 pr-4 shadow-2xl shadow-black/60">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet/15 text-violet-bright">
+          <Icon name="check" size={18} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-silver/40">Added to bag</p>
+          <p className="truncate text-sm font-medium text-chrome">{toast.name}</p>
+        </div>
+        <Link
+          href="/cart"
+          className="shrink-0 rounded-full border border-white/15 px-3 py-1.5 font-mono text-[8px] uppercase tracking-[0.14em] text-chrome transition-colors hover:border-violet/50 hover:text-violet-bright"
         >
-          <span style={{ fontSize: Math.min(20, FLY_W * 0.5), lineHeight: 1 }}>{flying.emoji}</span>
-        </div>
+          View bag
+        </Link>
       </div>
-      {toast && (
-        <div className="fixed z-[9998] px-5 py-2.5 rounded-full bg-navy text-white text-sm font-semibold shadow-xl animate-text-pop" style={{ left: Math.max(16, toast.x - 90), top: Math.max(16, toast.y - 20) }}>
-          {toast.message}
-        </div>
-      )}
-    </>
+    </div>
   );
 }

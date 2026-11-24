@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       rating: Number(body.rating) || 4.5,
       reviews: Number(body.reviews) || 0,
       badge: body.badge || undefined,
-      emoji: body.emoji || "🐾",
+      emoji: body.emoji || "◈",
       gradient: body.gradient || "from-cream to-blush",
       image: body.image || "/products/treattrek.jpeg",
       features: Array.isArray(body.features) ? body.features : String(body.features || "").split(",").map((s: string) => s.trim()).filter(Boolean),

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   }
   // listing all orders is admin-only
   const cookie = req.cookies.get("pb_admin")?.value;
-  const expected = process.env.ADMIN_PASSWORD || "pawberry-admin";
+  const expected = process.env.ADMIN_PASSWORD || "rewear-admin";
   if (cookie !== expected) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -47,7 +47,7 @@ export async function PATCH(req: NextRequest) {
     if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
     // allow owner (by email) or admin
     const cookie = req.cookies.get("pb_admin")?.value;
-    const isAdmin = cookie === (process.env.ADMIN_PASSWORD || "pawberry-admin");
+    const isAdmin = cookie === (process.env.ADMIN_PASSWORD || "rewear-admin");
     const userEmail = req.cookies.get("pb_user")?.value;
     const isOwner = !!userEmail && userEmail.trim().toLowerCase() === String(order.customer.email || "").trim().toLowerCase();
     if (!isAdmin && !isOwner) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

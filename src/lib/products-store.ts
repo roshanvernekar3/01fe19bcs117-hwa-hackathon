@@ -3,7 +3,11 @@ import { fetchBlobJson } from "@/lib/blob";
 import { PRODUCTS as STATIC } from "@/lib/products";
 import type { Product } from "@/lib/products";
 
-const KEY = "products/catalog.json";
+/**
+ * Versioned key: the REWEAR catalogue begins on a fresh Blob key so the
+ * previous catalogue is left untouched as a rollback point.
+ */
+const KEY = "rewear/catalog-v1.json";
 
 export async function getCatalog(): Promise<Product[]> {
   try {

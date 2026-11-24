@@ -3,10 +3,23 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Order } from "@/lib/orders";
-import PawLoader from "@/components/PawLoader";
+import { formatPrice } from "@/lib/format";
+import Loader from "@/components/Loader";
 import AvatarViewer from "@/components/AvatarViewer";
+import Icon from "@/components/ui/Icon";
 
 type Me = { user: { email: string; name: string; role: string; avatar?: string } | null; isAdmin: boolean };
+
+const GLYPHS = ["◈", "◇", "◉", "⌁", "✦", "⬡", "◎", "⌇", "▣", "◐", "✧", "⬢"];
+const DEFAULT_GLYPH = "◈";
+
+const statusStyles: Record<string, string> = {
+  received: "border-violet/30 bg-violet/10 text-violet-bright",
+  processing: "border-violet/30 bg-violet/10 text-violet-bright",
+  shipped: "border-sky-300/25 bg-sky-400/[0.07] text-sky-200/80",
+  delivered: "border-emerald-300/25 bg-emerald-400/[0.07] text-emerald-200/80",
+  cancelled: "border-red-300/20 bg-red-400/[0.06] text-red-200/80",
+};
 
 export default function ProfilePage() {
   const [me, setMe] = useState<Me | null>(null);
@@ -28,12 +41,12 @@ export default function ProfilePage() {
   >([]);
 
   useEffect(() => {
-      (async () => {
+    (async () => {
       try {
         const m = await fetch("/api/auth/me", { cache: "no-store" }).then((r) => r.json());
         setMe(m);
         if (m?.user?.email) {
-          const savedAvatar = m.user.avatar || "🐾";
+          const savedAvatar = m.user.avatar || DEFAULT_GLYPH;
           setAvatar(savedAvatar);
           setPreviewAvatar(null);
           const res = await fetch("/api/orders/mine", { cache: "no-store" });
@@ -88,17 +101,29 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) return <PawLoader message="Loading your profile…" />;
+  if (loading) return <div className="pt-40"><Loader message="Loading your profile…" /></div>;
 
   if (!me?.user) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <div className="text-6xl mb-4">👤</div>
-        <h1 className="text-3xl font-extrabold text-navy">Please log in</h1>
-        <p className="text-slate-500 mt-2">You need an account to view your profile.</p>
-        <div className="mt-6 flex gap-3 justify-center">
-          <Link href="/login" className="px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition">Login</Link>
-          <Link href="/signup" className="px-6 py-3 rounded-full border border-slate-200 font-semibold hover:bg-slate-50">Sign Up</Link>
+      <div className="relative flex min-h-[70vh] items-center pt-28">
+        <div className="pointer-events-none absolute inset-0 -z-10 grid-bg opacity-40" />
+        <div className="container-x flex flex-col items-center text-center">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full border border-white/12 text-silver/40">
+            <Icon name="user" size={26} />
+          </span>
+          <p className="eyebrow mt-6">Account / locked</p>
+          <h1 className="mt-3 text-4xl font-medium tracking-tight text-chrome">Please log in</h1>
+          <p className="mt-3 max-w-sm text-sm text-silver/45">
+            An account keeps your orders, saved pieces and repair history in one place.
+          </p>
+          <div className="mt-7 flex gap-3">
+            <Link href="/login" className="btn btn-primary btn-sm">
+              Log in
+            </Link>
+            <Link href="/signup" className="btn btn-ghost btn-sm">
+              Create account
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -106,8 +131,35 @@ export default function ProfilePage() {
 
   const user = me.user;
   const displayAvatar = previewAvatar ?? avatar;
-  const isUploadedImage = displayAvatar && (displayAvatar.startsWith("http") || displayAvatar.startsWith("data:"));
+  const isUploadedImage = !!displayAvatar && (displayAvatar.startsWith("http") || displayAvatar.startsWith("data:"));
   const isEmojiOnly = !displayAvatar || (!displayAvatar.startsWith("http") && !displayAvatar.startsWith("data:"));
+  const initials = user.name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  async function saveEmojiAvatar() {
+    setSavingAvatar(true);
+    setAvatarMsg(null);
+    try {
+      const res = await fetch("/api/auth/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || "Could not save avatar");
+      setAvatar(d.user.avatar);
+      setPreviewAvatar(null);
+      setAvatarMsg("Saved.");
+    } catch (err) {
+      setAvatarMsg(err instanceof Error ? err.message : "Could not save avatar");
+    } finally {
+      setSavingAvatar(false);
+    }
+  }
 
   async function handlePhotoUpload(file: File) {
     if (!file.type.startsWith("image/")) {
@@ -122,35 +174,15 @@ export default function ProfilePage() {
       const res = await fetch("/api/auth/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: dataUrl }),
+        body: JSON.stringify({ avatar: dataUrl }),
       });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(d.error || "Upload failed");
-      setAvatar(d.user.avatar);
-      setPreviewAvatar(null);
-      setAvatarMsg("Photo saved!");
-    } catch (err) {
-      setAvatarMsg(err instanceof Error ? err.message : "Upload failed");
-      setPreviewAvatar(null);
-    } finally {
-      setSavingAvatar(false);
-    }
-  }
-
-  async function saveEmojiAvatar() {
-    setAvatarMsg(null);
-    setSavingAvatar(true);
-    try {
-      const res = await fetch("/api/auth/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ avatar }),
-      });
-      const d = await res.json().catch(() => ({}));
+      const d = await res.json();
       if (!res.ok) throw new Error(d.error || "Could not save avatar");
       setAvatar(d.user.avatar);
-      setAvatarMsg("Avatar saved!");
+      setPreviewAvatar(null);
+      setAvatarMsg("Saved.");
     } catch (err) {
+      setPreviewAvatar(null);
       setAvatarMsg(err instanceof Error ? err.message : "Could not save avatar");
     } finally {
       setSavingAvatar(false);
@@ -164,13 +196,13 @@ export default function ProfilePage() {
       const res = await fetch("/api/auth/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ avatar: "\u{1F43E}" }),
+        body: JSON.stringify({ avatar: DEFAULT_GLYPH }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || "Could not remove avatar");
-      setAvatar(d.user.avatar || "\u{1F43E}");
+      setAvatar(d.user.avatar || DEFAULT_GLYPH);
       setPreviewAvatar(null);
-      setAvatarMsg("Photo removed!");
+      setAvatarMsg("Photo removed.");
     } catch (err) {
       setAvatarMsg(err instanceof Error ? err.message : "Could not remove avatar");
     } finally {
@@ -179,222 +211,311 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Header card */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-100 mb-6 flex flex-col sm:flex-row items-center gap-5">
-        <div
-          onClick={() => {
-            if (displayAvatar && (displayAvatar.startsWith("http") || displayAvatar.startsWith("data:"))) setViewerSrc(displayAvatar);
-          }}
-          className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl flex-shrink-0 overflow-hidden cursor-pointer"
-        >
-          {displayAvatar && (displayAvatar.startsWith("http") ? <img src={displayAvatar} alt="" className="w-full h-full object-cover" /> : displayAvatar)}
-        </div>
-        <div className="flex-1 text-center sm:text-left">
-          <h1 className="text-2xl font-extrabold text-navy">{user.name}</h1>
-          <p className="text-slate-500 text-sm">{user.email}</p>
-          <span className="inline-block mt-2 text-xs font-semibold text-berry bg-berry/10 px-3 py-1 rounded-full capitalize">{user.role}</span>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/orders" className="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold hover:bg-slate-50">Track Order</Link>
-        </div>
+    <div className="relative pt-28 sm:pt-32">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80">
+        <div className="absolute inset-0 grid-bg opacity-40" />
+        <div className="absolute left-1/4 top-0 h-64 w-96 rounded-full bg-violet/10 blur-[110px]" />
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-slate-200">
-        {(["profile", "orders", "wishlist"] as const).map((t) => (
+      <div className="container-x max-w-5xl pb-24">
+        {/* Header */}
+        <div className="flex flex-col gap-5 rounded-2xl border border-white/[0.1] bg-white/[0.025] p-5 sm:flex-row sm:items-center sm:p-6">
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-semibold capitalize border-b-2 -mb-px transition ${tab === t ? "border-berry text-berry" : "border-transparent text-slate-500 hover:text-navy"}`}
+            type="button"
+            onClick={() => {
+              if (isUploadedImage) setViewerSrc(displayAvatar);
+            }}
+            className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-violet/30 bg-violet/10 text-3xl text-violet-bright"
+            aria-label={isUploadedImage ? "View profile photo" : "Profile glyph"}
           >
-            {t}
+            {isUploadedImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={displayAvatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span>{displayAvatar || initials || DEFAULT_GLYPH}</span>
+            )}
           </button>
-        ))}
-      </div>
 
-      {tab === "profile" && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl p-6 border border-slate-100">
-            <h2 className="text-xl font-bold text-navy mb-4">Profile Picture</h2>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blush to-peach flex items-center justify-center text-4xl overflow-hidden">
-                {displayAvatar && isUploadedImage ? (
-                  <img src={displayAvatar} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  displayAvatar || "🐾"
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="text-sm text-slate-500 mb-2">Choose a pet avatar</div>
-                <div className="flex flex-wrap gap-2">
-                  {["🐾","🐶","🐱","🐰","🐹","🦊","🐻","🐼","🐨","🐯","🦁","🐮"].map((e) => (
-                    <button
-                      key={e}
-                      onClick={() => { setAvatar(e); setPreviewAvatar(null); }}
-                      className={`w-10 h-10 rounded-full text-xl flex items-center justify-center border-2 transition ${avatar === e && !previewAvatar ? "border-berry bg-berry/10" : "border-slate-200 hover:border-berry"}`}
-                    >
-                      {e}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="flex-1 text-center sm:text-left">
+            <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-violet-bright/70">
+              Member / {user.role}
+            </p>
+            <h1 className="mt-1 text-2xl font-medium tracking-tight text-chrome sm:text-3xl">{user.name}</h1>
+            <p className="mt-0.5 text-sm text-silver/45">{user.email}</p>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Upload photo */}
-              <label className="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold cursor-pointer hover:bg-slate-50">
-                {savingAvatar && previewAvatar ? "Uploading..." : "Change photo"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={savingAvatar}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    e.target.value = "";
-                    if (file) handlePhotoUpload(file);
-                  }}
-                />
-              </label>
-
-              {/* Save emoji avatar - only when no uploaded image and not uploading */}
-              {isEmojiOnly && !savingAvatar && (
-                <button
-                  onClick={saveEmojiAvatar}
-                  className="px-5 py-2 rounded-full bg-berry text-white text-sm font-semibold hover:bg-berry-dark transition"
-                >
-                  Save Avatar
-                </button>
-              )}
-
-              {/* Remove uploaded photo - only when uploaded image exists and not uploading */}
-              {isUploadedImage && !savingAvatar && (
-                <button
-                  onClick={removeUploadedPhoto}
-                  className="px-5 py-2 rounded-full border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition"
-                >
-                  Remove Photo
-                </button>
-              )}
-
-              {/* Loading state - show spinner when any save/upload in progress */}
-              {savingAvatar && (
-                <span className="text-sm text-slate-500">Saving…</span>
-              )}
-            </div>
-            {avatarMsg && (
-              <p className={`mt-3 text-sm ${avatarMsg.includes("saved") || avatarMsg.includes("removed") ? "text-green-600" : "text-red-500"}`}>{avatarMsg}</p>
+          <div className="flex flex-wrap justify-center gap-2 sm:justify-end">
+            <Link href="/orders" className="btn btn-ghost btn-sm">
+              <Icon name="truck" size={13} /> Track order
+            </Link>
+            {me.isAdmin && (
+              <Link href="/admin" className="btn btn-primary btn-sm">
+                Ops console
+              </Link>
             )}
           </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-slate-100">
-            <h2 className="text-xl font-bold text-navy mb-4">Account Details</h2>
-          <div className="grid sm:grid-cols-2 gap-4 text-sm">
-            <div><span className="text-slate-500">Name</span><div className="font-semibold text-navy">{user.name}</div></div>
-            <div><span className="text-slate-500">Email</span><div className="font-semibold text-navy">{user.email}</div></div>
-            <div><span className="text-slate-500">Role</span><div className="font-semibold text-navy capitalize">{user.role}</div></div>
-            <div><span className="text-slate-500">Member since</span><div className="font-semibold text-navy">{new Date().toLocaleDateString()}</div></div>
-          </div>
-          <div className="mt-6">
-            <Link href="/orders" className="text-berry font-semibold hover:underline">View all orders →</Link>
-          </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-slate-100">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-navy">Saved Addresses</h2>
-            <Link href="/checkout" className="text-xs font-semibold text-berry hover:underline">Add at checkout →</Link>
-          </div>
-          {addresses.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              No saved addresses yet. Your address is saved automatically when you tick &ldquo;Save this address for next time&rdquo; at checkout.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {addresses.map((a) => (
-                <div key={a.id} className="rounded-xl border border-slate-100 p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-navy flex items-center gap-2">
-                      {a.label}
-                      {a.isDefault && <span className="text-[10px] px-2 py-0.5 rounded-full bg-berry/10 text-berry font-semibold">Default</span>}
-                    </span>
-                    <div className="flex items-center gap-3 text-xs">
-                      {!a.isDefault && (
-                        <button onClick={() => makeDefaultAddress(a.id)} className="text-berry hover:underline">Make default</button>
-                      )}
-                      <button onClick={() => removeAddress(a.id)} className="text-red-600 hover:underline">Remove</button>
-                    </div>
-                  </div>
-                  <div className="text-sm text-slate-600 mt-1">
-                    {a.name} · {a.phone}<br />
-                    {a.address}, {a.city} {a.zip}, {a.country}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Tabs */}
+        <div className="mt-8 flex gap-1 border-b border-white/[0.08]">
+          {(["profile", "orders", "wishlist"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`-mb-px border-b px-4 py-2.5 font-mono text-[9px] uppercase tracking-[0.16em] transition ${
+                tab === t
+                  ? "border-violet text-violet-bright"
+                  : "border-transparent text-silver/35 hover:text-chrome"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
-        </div>
-      )}
-      {tab === "orders" && (
-        <div className="space-y-3">
-          {orders.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
-              <div className="text-5xl mb-3">📦</div>
-              No orders yet. <Link href="/products" className="text-berry font-semibold hover:underline">Start shopping</Link>
-            </div>
-          ) : (
-            orders.map((o) => (
-              <div key={o.id} className="bg-white rounded-2xl p-5 border border-slate-100">
-                <div className="flex flex-wrap justify-between items-start gap-2">
-                  <div>
-                    <Link href={`/orders/${encodeURIComponent(o.id)}`} className="font-bold text-navy hover:text-berry hover:underline">{o.id}</Link>
-                    <div className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString()}</div>
+
+        {tab === "profile" && (
+          <div className="mt-6 space-y-4">
+            <section className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5 sm:p-6">
+              <h2 className="font-mono text-[9px] uppercase tracking-[0.2em] text-silver/45">Identity mark</h2>
+              <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-violet/30 bg-violet/10 text-3xl text-violet-bright">
+                  {isUploadedImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={displayAvatar} alt="Avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    displayAvatar || initials
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-silver/30">
+                    Choose a glyph or upload a photo
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {GLYPHS.map((glyph) => (
+                      <button
+                        key={glyph}
+                        onClick={() => {
+                          setAvatar(glyph);
+                          setPreviewAvatar(null);
+                        }}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full border text-base transition ${
+                          avatar === glyph && !previewAvatar
+                            ? "border-violet bg-violet/15 text-violet-bright"
+                            : "border-white/10 text-silver/50 hover:border-violet/40 hover:text-chrome"
+                        }`}
+                        aria-label={`Use glyph ${glyph}`}
+                        aria-pressed={avatar === glyph && !previewAvatar}
+                      >
+                        {glyph}
+                      </button>
+                    ))}
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold text-berry">₹{o.total}</div>
-                    <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
-                      o.status === "cancelled" ? "bg-red-100 text-red-600" :
-                      o.status === "delivered" ? "bg-green-100 text-green-600" :
-                      "bg-berry/10 text-berry"
-                    }`}>{o.status}</span>
-                  </div>
-                </div>
-                <div className="mt-3 text-sm text-slate-700">
-                  {o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}
-                </div>
-                <div className="mt-2 text-xs text-slate-500">
-                  {o.customer.address}, {o.customer.city} {o.customer.zip}
-                </div>
-                {o.status !== "cancelled" && o.status !== "delivered" && o.status !== "shipped" && (
-                  <button
-                    onClick={() => cancelOrder(o.id)}
-                    disabled={cancelling === o.id}
-                    className="mt-3 text-xs text-red-600 hover:underline disabled:opacity-50"
-                  >
-                    {cancelling === o.id ? "Cancelling..." : "Cancel order"}
-                  </button>
-                )}
-                <div className="mt-3">
-                  <Link href={`/orders/${encodeURIComponent(o.id)}`} className="text-xs font-semibold text-berry hover:underline">
-                    View details →
-                  </Link>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      )}
 
-      {tab === "wishlist" && (
-        <div className="text-center py-8">
-          <Link href="/wishlist" className="px-6 py-3 rounded-full bg-berry text-white font-semibold hover:bg-berry-dark transition">
-            View Wishlist
-          </Link>
-        </div>
-      )}
-      {viewerSrc && <AvatarViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />}
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <label className="btn btn-ghost btn-sm cursor-pointer">
+                  {savingAvatar && previewAvatar ? "Uploading…" : "Change photo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={savingAvatar}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (file) handlePhotoUpload(file);
+                    }}
+                  />
+                </label>
+
+                {isEmojiOnly && !savingAvatar && (
+                  <button onClick={saveEmojiAvatar} className="btn btn-primary btn-sm">
+                    Save glyph
+                  </button>
+                )}
+
+                {isUploadedImage && !savingAvatar && (
+                  <button
+                    onClick={removeUploadedPhoto}
+                    className="rounded-full border border-red-400/25 px-4 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-red-300 transition hover:bg-red-500/10"
+                  >
+                    Remove photo
+                  </button>
+                )}
+
+                {savingAvatar && <span className="text-xs text-silver/40">Saving…</span>}
+              </div>
+
+              {avatarMsg && (
+                <p
+                  className={`mt-3 text-xs ${
+                    avatarMsg.includes("Saved") || avatarMsg.includes("removed")
+                      ? "text-violet-bright"
+                      : "text-red-300"
+                  }`}
+                  role="status"
+                >
+                  {avatarMsg}
+                </p>
+              )}
+            </section>
+
+            <section className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5 sm:p-6">
+              <h2 className="font-mono text-[9px] uppercase tracking-[0.2em] text-silver/45">Account details</h2>
+              <div className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+                <div>
+                  <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-silver/30">Name</p>
+                  <p className="mt-1 text-chrome">{user.name}</p>
+                </div>
+                <div>
+                  <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-silver/30">Email</p>
+                  <p className="mt-1 text-chrome">{user.email}</p>
+                </div>
+                <div>
+                  <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-silver/30">Role</p>
+                  <p className="mt-1 capitalize text-chrome">{user.role}</p>
+                </div>
+                <div>
+                  <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-silver/30">Member since</p>
+                  <p className="mt-1 text-chrome">{new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long" })}</p>
+                </div>
+              </div>
+              <div className="mt-5 flex flex-wrap gap-4 border-t border-white/[0.08] pt-4">
+                <Link href="/orders" className="font-mono text-[9px] uppercase tracking-[0.14em] text-violet-bright hover:text-chrome">
+                  View all orders →
+                </Link>
+                <Link href="/wishlist" className="font-mono text-[9px] uppercase tracking-[0.14em] text-silver/40 hover:text-chrome">
+                  View wishlist →
+                </Link>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="font-mono text-[9px] uppercase tracking-[0.2em] text-silver/45">Saved addresses</h2>
+                <Link href="/checkout" className="font-mono text-[8px] uppercase tracking-[0.14em] text-violet-bright hover:text-chrome">
+                  Add at checkout →
+                </Link>
+              </div>
+              {addresses.length === 0 ? (
+                <p className="mt-3 text-sm text-silver/40">
+                  No saved addresses yet. Tick &ldquo;Save this address&rdquo; at checkout and it will appear here.
+                </p>
+              ) : (
+                <div className="mt-4 space-y-2.5">
+                  {addresses.map((a) => (
+                    <div key={a.id} className="rounded-xl border border-white/[0.08] bg-white/[0.015] p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="flex items-center gap-2 text-sm font-medium text-chrome">
+                          {a.label}
+                          {a.isDefault && (
+                            <span className="rounded-full bg-violet/15 px-2 py-0.5 font-mono text-[7px] uppercase tracking-[0.12em] text-violet-bright">
+                              Default
+                            </span>
+                          )}
+                        </span>
+                        <div className="flex items-center gap-3 font-mono text-[8px] uppercase tracking-[0.12em]">
+                          {!a.isDefault && (
+                            <button onClick={() => makeDefaultAddress(a.id)} className="text-violet-bright hover:text-chrome">
+                              Make default
+                            </button>
+                          )}
+                          <button onClick={() => removeAddress(a.id)} className="text-silver/30 hover:text-red-300">
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                      <p className="mt-1.5 text-xs leading-relaxed text-silver/45">
+                        {a.name} · {a.phone}
+                        <br />
+                        {a.address}, {a.city} {a.zip}, {a.country}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {tab === "orders" && (
+          <div className="mt-6 space-y-3">
+            {orders.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/12 px-6 py-14 text-center">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-white/12 text-silver/40">
+                  <Icon name="bag" size={20} />
+                </span>
+                <p className="mt-4 text-sm text-silver/45">No orders yet.</p>
+                <Link href="/products" className="btn btn-primary btn-sm mt-5">
+                  Explore Drop 01 <Icon name="arrow-right" size={13} />
+                </Link>
+              </div>
+            ) : (
+              orders.map((o) => (
+                <div key={o.id} className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <Link
+                        href={`/orders/${encodeURIComponent(o.id)}`}
+                        className="font-mono text-xs uppercase tracking-[0.12em] text-chrome hover:text-violet-bright"
+                      >
+                        {o.id}
+                      </Link>
+                      <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.14em] text-silver/30">
+                        {new Date(o.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-chrome">{formatPrice(o.total)}</span>
+                      <span
+                        className={`rounded-full border px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.12em] ${
+                          statusStyles[o.status] ?? statusStyles.received
+                        }`}
+                      >
+                        {o.status}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-silver/50">
+                    {o.items.map((i) => `${i.name} ×${i.qty}`).join(" · ")}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-white/[0.06] pt-3">
+                    <Link
+                      href={`/orders/${encodeURIComponent(o.id)}`}
+                      className="font-mono text-[9px] uppercase tracking-[0.14em] text-violet-bright hover:text-chrome"
+                    >
+                      View details →
+                    </Link>
+                    {o.status !== "cancelled" && o.status !== "delivered" && o.status !== "shipped" && (
+                      <button
+                        onClick={() => cancelOrder(o.id)}
+                        disabled={cancelling === o.id}
+                        className="font-mono text-[9px] uppercase tracking-[0.14em] text-silver/30 hover:text-red-300 disabled:opacity-50"
+                      >
+                        {cancelling === o.id ? "Cancelling…" : "Cancel order"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {tab === "wishlist" && (
+          <div className="mt-6 rounded-2xl border border-white/[0.09] bg-white/[0.02] px-6 py-14 text-center">
+            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-silver/35">
+              Your saved pieces live here
+            </p>
+            <Link href="/wishlist" className="btn btn-primary btn-sm mt-5">
+              Open wishlist <Icon name="heart" size={13} />
+            </Link>
+          </div>
+        )}
+
+        {viewerSrc && <AvatarViewer src={viewerSrc} onClose={() => setViewerSrc(null)} />}
+      </div>
     </div>
   );
 }
